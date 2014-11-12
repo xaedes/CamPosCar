@@ -128,7 +128,16 @@ while not done:
         x_i,y_i = sampleLine(x,y)
         closestSupport = closestSupportPointIdxs(x,y,x_i,y_i)
 
-
+    keys = pygame.key.get_pressed()
+    if selected_support_point is not None:
+        if keys[pygame.K_DELETE]:
+            x = x[:selected_support_point]+x[selected_support_point+1:]
+            y = y[:selected_support_point]+y[selected_support_point+1:]
+            selected_support_point = None
+            drag_and_drop_support_point = False
+            x_i,y_i = sampleLine(x,y)
+            closestSupport = closestSupportPointIdxs(x,y,x_i,y_i)            
+            
     # deselect support points
     if left_button == 0:
         drag_and_drop_support_point = False
