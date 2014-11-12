@@ -4,6 +4,7 @@
 from __future__ import division    # Standardmäßig float division - Ganzzahldivision kann man explizit mit '//' durchführen
 import numpy as np    
 from scipy import interpolate
+import math
 
 class Lane(object):
     """docstring for ClassName"""
@@ -17,6 +18,7 @@ class Lane(object):
         self.sampled_y = []
         self.interval = interval
         self.size = size
+        self.path_len = 0
         self.selected = None
 
     def add_support_point(self, x,y,before=-1):
@@ -39,6 +41,10 @@ class Lane(object):
     def update(self):
         try:
             self.sampled_x, self.sampled_y = self.sample_line()
+            diffs = np.sqrt(
+                np.square(np.diff(self.sampled_x))+
+                np.square(np.diff(self.sampled_y)))
+            self.path_len = diffs.sum()
         except Exception, e:
             pass    
         finally:
@@ -53,13 +59,13 @@ class Lane(object):
         if self.n_support < 3:
             return [],[]
         # sample some points to determine path length
-
         tck,u=interpolate.splprep([
             self.support_x+self.support_x[0:1],
             self.support_y+self.support_y[0:1]],s=0.0,per=1)
         x_i,y_i= interpolate.splev(np.linspace(0,1,50),tck)
         diffs = np.sqrt(np.square(np.diff(x_i))+np.square(np.diff(y_i)))
         path_len = diffs.sum()
+
         # we want to sample the points so that the distance between neighboring points is just interval
         # so sample round(path_len) points
         x_i,y_i= interpolate.splev(np.linspace(0,1,round(path_len/interval)),tck)
@@ -102,3 +108,16 @@ class Lane(object):
             second = first + 1
 
         return first,second
+
+    def sample_tangents(self):
+        left_shifted_x  = np.hstack([self.sampled_x[-1],self.sampled_x[:-1]]) 
+        right_shifted_x = np.hstack([self.sampled_x[1:],self.sampled_x[-1]])
+        dx = left_shifted_x - right_shifted_x
+        left_shifted_y  = np.hstack([self.sampled_y[-1],self.sampled_y[:-1]]) 
+        right_shifted_y = np.hstack([self.sampled_y[1:],self.sampled_y[-1]])
+        dy = left_shifted_y - right_shifted_y
+        tangents = np.arctan2(dy,dx)*180/math.pi
+        # diffs = np.hstack([0,np.diff(tangents)])
+        # diffs -= np.round(diffs/360)*360
+        # tangents = tangents[0] + diffs.cumsum()
+        return tangents
