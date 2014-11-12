@@ -22,27 +22,108 @@ import pygame
 
 from time import time
 from scipy import interpolate
-drag_and_drop_support_point = False
-selected_support_point = None
-x=[100,200,200,100]
-y=[100,100,200,200]
-x = x 
-y = y 
 
-def sampleLine(support_x,support_y,interval=5):
-    # sample some points to determine path length
+class Lane(object):
+    """docstring for ClassName"""
+    def __init__(self, interval=1,size=6):
+        super(Lane, self).__init__()
+        self.n_support = 0
+        self.n_sampled = 0
+        self.support_x = []
+        self.support_y = []
+        self.sampled_x = []
+        self.sampled_y = []
+        self.interval = interval
+        self.size = size
+        self.selected = None
 
-    tck,u=interpolate.splprep([support_x+support_x[0:1],support_y+support_y[0:1]],s=0.0,per=1)
-    x_i,y_i= interpolate.splev(np.linspace(0,1,50),tck)
-    diffs = np.sqrt(np.square(np.diff(x_i))+np.square(np.diff(y_i)))
-    path_len = diffs.sum()
-    # we want to sample the points so that the distance between neighboring points is just interval
-    # so sample round(path_len) points
-    x_i,y_i= interpolate.splev(np.linspace(0,1,round(path_len/interval)),tck)
-    return x_i,y_i
+    def add_support_point(self, x,y,before=-1):
+        self.support_x = self.support_x[:before+1] + [x] + self.support_x[before+1:]
+        self.support_y = self.support_y[:before+1] + [y] + self.support_y[before+1:]
+        self.n_support+=1
+        self.update()
 
-x_i,y_i = sampleLine(x,y)
-last_support_point_insert_time = time()
+    def remove_support_point(self, index):
+        self.support_x = self.support_x[:index]+self.support_x[index+1:]
+        self.support_y = self.support_y[:index]+self.support_y[index+1:]
+        self.n_support-=1
+        self.update()
+
+    def move_support_point(self,index,x,y):
+        self.support_x[index]=x
+        self.support_y[index]=y
+        self.update()
+
+    def update(self):
+        self.sampled_x, self.sampled_y = self.sample_line()
+        self.n_sampled = len(self.sampled_x)
+        self.closest_supports = self.closest_support_idxs(self.sampled_x, self.sampled_y)
+
+    def sample_line(self, interval = None):
+        if interval is None:
+            interval = self.interval
+        if self.n_support < 3:
+            return [],[]
+        # sample some points to determine path length
+
+        tck,u=interpolate.splprep([
+            self.support_x+self.support_x[0:1],
+            self.support_y+self.support_y[0:1]],s=0.0,per=1)
+        x_i,y_i= interpolate.splev(np.linspace(0,1,50),tck)
+        diffs = np.sqrt(np.square(np.diff(x_i))+np.square(np.diff(y_i)))
+        path_len = diffs.sum()
+        # we want to sample the points so that the distance between neighboring points is just interval
+        # so sample round(path_len) points
+        x_i,y_i= interpolate.splev(np.linspace(0,1,round(path_len/interval)),tck)
+        return x_i,y_i
+
+    def support_point_rect(self,index):
+        return [self.support_x[index]-self.size/2, self.support_y[index]-self.size/2, self.size, self.size]
+
+    def closest_idx(self,points_x,points_y, to_x, to_y):
+        # get closest point in (points_x,points_y) to (to_x, to_y)
+        distances = np.sqrt(np.square(points_x-to_x)+np.square(points_y-to_y))
+        return np.argmin(distances)
+
+    def closest_sampled_idx(self,x, y):
+        return self.closest_idx(self.sampled_x,self.sampled_y,x,y)
+
+    def closest_support_idx(self,x,y):
+        return self.closest_idx(self.support_x,self.support_y,x,y)
+
+    def closest_support_idxs(self,xs,ys):
+        return [self.closest_support_idx(x,y) for x,y in zip(xs,ys)]
+
+    def closest_segment(self,x,y):
+        closest_sampled = self.closest_sampled_idx(x,y)
+        closest_sampled_of_closest_support = self.closest_sampled_idx(
+            self.support_x[self.closest_supports[closest_sampled]],
+            self.support_y[self.closest_supports[closest_sampled]])
+        # find first support point of the closest segment
+        if self.closest_supports[closest_sampled] == 0 and closest_sampled > self.n_sampled/2:
+            # last segment
+            first = self.n_support - 1
+            second = 0
+        else:
+            # any other segment
+            if closest_sampled_of_closest_support > closest_sampled:
+                first = self.closest_supports[closest_sampled] - 1
+            else:
+                first = self.closest_supports[closest_sampled]
+
+            second = first + 1
+
+        return first,second
+
+
+
+lane = Lane()
+lane.add_support_point(100,100)
+lane.add_support_point(200,100)
+lane.add_support_point(200,200)
+lane.add_support_point(100,200)
+
+
 
 # Define some colors
 BLACK    = (   0,   0,   0)
@@ -64,45 +145,11 @@ done = False
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
 
-def supportPointRect(i,j):
-    return [i-support_point_size_half, j-support_point_size_half, support_point_size, support_point_size]
-
 def inRect(rect, i, j):
     x,y,w,h = rect
     return i >= x and i <= x + w - 1 and  j >= y and j <= y + h - 1
 
-def closestPointIdx(points_x,points_y, x, y):
-    # get closest point in (points_x,points_y) too (x,y)
-    distances = np.sqrt(np.square(points_x-x)+np.square(points_y-y))
-    closest_idx = np.argmin(distances)
-    return closest_idx
-
-def closestSupportPointIdx(support_x,support_y,x,y):
-    return closestPointIdx(support_x,support_y,x,y)
-
-def closestSupportPointIdxs(support_x,support_y,xs,ys):
-    return [closestSupportPointIdx(support_x,support_y,x,y) for x,y in zip(xs,ys)]
-
-def closestSegment(support_x,support_y,x_i,y_i,closestSupport,x,y):
-    closestOnLine = closestPointIdx(x_i,y_i,x,y)
-    closestSupportIdx = closestPointIdx(x_i,y_i,support_x[closestSupport[closestOnLine]],support_y[closestSupport[closestOnLine]])
-    # find first support point of the closest segment
-    if closestSupport[closestOnLine] == 0 and closestOnLine > len(x_i)/2:
-        # last segment
-        first = len(support_x) - 1
-        second = 0
-    else:
-        # any other segment
-        if closestSupportIdx > closestOnLine:
-            first = closestSupport[closestOnLine] - 1
-        else:
-            first = closestSupport[closestOnLine]
-
-        second = first + 1
-
-    return first,second
-
-closestSupport = closestSupportPointIdxs(x,y,x_i,y_i)
+last_support_point_insert_time = time() 
 
 # -------- Main Program Loop -----------
 while not done:
@@ -115,34 +162,33 @@ while not done:
     (left_button, middle_button, right_button) = pygame.mouse.get_pressed() 
     
     # select support points
-    if left_button == 1 and not drag_and_drop_support_point:
-        for (k,i,j) in zip(range(len(x)),x,y):
-            if inRect(supportPointRect(i,j),cursor[0],cursor[1]):
-                drag_and_drop_support_point = True
-                selected_support_point = k
+    if left_button == 1 and lane.selected is None:
+        for k in range(lane.n_support):
+            if inRect(lane.support_point_rect(k),cursor[0],cursor[1]):
+                lane.selected = k
 
     # move support points
-    if left_button == 1 and drag_and_drop_support_point and selected_support_point is not None:
-        x[selected_support_point] = cursor[0]
-        y[selected_support_point] = cursor[1]
-        x_i,y_i = sampleLine(x,y)
-        closestSupport = closestSupportPointIdxs(x,y,x_i,y_i)
+    if left_button == 1 and  lane.selected is not None:
+        lane.move_support_point(lane.selected, cursor[0], cursor[1])
 
     keys = pygame.key.get_pressed()
-    if selected_support_point is not None:
+    if lane.selected is not None:
         if keys[pygame.K_DELETE]:
-            x = x[:selected_support_point]+x[selected_support_point+1:]
-            y = y[:selected_support_point]+y[selected_support_point+1:]
-            selected_support_point = None
-            drag_and_drop_support_point = False
-            x_i,y_i = sampleLine(x,y)
-            closestSupport = closestSupportPointIdxs(x,y,x_i,y_i)            
+            lane.remove_support_point(lane.selected)
+            lane.selected = None
 
     # deselect support points
     if left_button == 0:
-        drag_and_drop_support_point = False
-        selected_support_point = None
- 
+        lane.selected = None
+
+    # add new support point
+    if right_button==1:
+        if time() - last_support_point_insert_time > 1:
+            first,_ = lane.closest_segment(cursor[0],cursor[1])
+            closest = lane.closest_sampled_idx(cursor[0],cursor[1]) 
+            lane.add_support_point(lane.sampled_x[closest],lane.sampled_y[closest],first)
+            last_support_point_insert_time = time() 
+
     # --- Game logic should go here
  
     # --- Drawing code should go here
@@ -152,30 +198,17 @@ while not done:
     screen.fill(WHITE)
  
     # Draw the interpolated line
-    points = zip(x_i, y_i)
+    points = zip(lane.sampled_x, lane.sampled_y)
     pygame.draw.aalines(screen, BLACK, False, points, 2)
 
     # Draw support points
-    support_point_size = 6
-    support_point_size_half = 3
-    for (k,i,j) in zip(range(len(x)),x,y):
-        if selected_support_point == k:
-            pygame.draw.rect(screen, BLACK, supportPointRect(i,j), 2)
+    for k in range(lane.n_support):
+        if lane.selected == k:
+            pygame.draw.rect(screen, BLACK, lane.support_point_rect(k), 2)
         else:
-            pygame.draw.rect(screen, BLACK, supportPointRect(i,j), 1)
+            pygame.draw.rect(screen, BLACK, lane.support_point_rect(k), 1)
 
-
-    if right_button==1:
-        if time() - last_support_point_insert_time > 1:
-            first,_=closestSegment(x,y,x_i,y_i,closestSupport,cursor[0],cursor[1])
-            closestOnLine = closestPointIdx(x_i,y_i,cursor[0],cursor[1])
-            x=x[:first+1]+[x_i[closestOnLine]]+x[first+1:]
-            y=y[:first+1]+[y_i[closestOnLine]]+y[first+1:]
-
-            x_i,y_i = sampleLine(x,y)
-            closestSupport = closestSupportPointIdxs(x,y,x_i,y_i)
-            last_support_point_insert_time = time() 
-
+    
     
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
