@@ -30,7 +30,7 @@ BLACK    = (   0,   0,   0)
 WHITE    = ( 255, 255, 255)
 GREEN    = (   0, 255,   0)
 RED      = ( 255,   0,   0)
- 
+DARKBLUE = (   0,   0, 128)
 def inRect(rect, i, j):
     x,y,w,h = rect
     return i >= x and i <= x + w - 1 and  j >= y and j <= y + h - 1
@@ -143,7 +143,17 @@ class App(object):
 
         # Draw car
         self.draw_rotated_rect(self.car.x,self.car.y,self.car.size,self.car.size*0.8,self.car.theta)
-        # self.rotate_points(,)
+        if self.action is not None:
+            action_lines={}
+            m = self.car.size * 1.10
+            l = self.car.size * 0.5
+            for a in self.car.actions:
+                action_line = self.translate_points(self.rotate_points([(0,0),(m,-a*l)],self.car.theta),self.car.x,self.car.y)
+                color = DARKBLUE if self.action == a else BLACK
+                width = 2 if self.action == a else 1
+                # print action_line
+                pygame.draw.lines(self.screen,color,False,action_line,width)
+        
 
     def input(self):
         # get mouse info
@@ -185,9 +195,9 @@ class App(object):
 
         self.action = 0
         if keys[pygame.K_LEFT]:
-            self.action -= 1
-        if keys[pygame.K_RIGHT]:
             self.action += 1
+        if keys[pygame.K_RIGHT]:
+            self.action -= 1
     def spin(self):
         # Loop until the user clicks the close button.
         done = False
