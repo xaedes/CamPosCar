@@ -23,6 +23,7 @@ import pygame
 from time import time
 
 from Lane import Lane
+import math
 
 # Define some colors
 BLACK    = (   0,   0,   0)
@@ -34,6 +35,28 @@ def inRect(rect, i, j):
     x,y,w,h = rect
     return i >= x and i <= x + w - 1 and  j >= y and j <= y + h - 1
 
+
+class Car(object):
+    """docstring for Car"""
+    def __init__(self, x, y, theta, speed=1, size=10):
+        super(Car, self).__init__()
+        self.x = x
+        self.y = y
+        self.theta = theta # in degree
+        self.size = size
+        self.speed = speed # px / s
+        # self.theta_rate =  10 # in degree/s
+
+    # def forward(self,action,dt):
+    #     assert action in [-1,0,1]
+    #     # action == -1  : left
+    #     # action ==  0  : middle
+    #     # action ==  1  : right
+    #     vx = math.cos(self.theta) * self.speed * dt
+    #     vy = math.sin(self.theta) * self.speed * dt
+    #     self.x += vx
+    #     self.y += vy
+    #     self.theta -= self.theta_rate * dt * action
 
 
 
@@ -49,6 +72,8 @@ class App(object):
         self.lane.add_support_point(200,100)
         self.lane.add_support_point(200,200)
         self.lane.add_support_point(100,200)
+
+        self.car = Car(x=150,y=100,theta=45)
 
         self.last_support_point_insert_time = time() 
 
@@ -69,6 +94,29 @@ class App(object):
         rendered = self.font.render(str(string), True,color)
         self.screen.blit(rendered,(x,y))
 
+    def rotate_points(self,points,angle):
+        d2r=math.pi/180
+        cs,sn=math.cos(angle*d2r),math.sin(angle*d2r)
+        return [(i * cs - j * sn,i * sn + j * cs) for (i,j) in points]
+    def translate_points(self,points,x,y):
+        return [(i+x,j+y) for (i,j) in points]
+
+    def draw_rotated_rect(self,x,y,w,h,angle,color=BLACK):
+        xs=[-w/2,
+           w/2,
+           w/2,
+           -w/2]
+
+        ys=[-h/2,
+           -h/2,
+           h/2,
+           h/2]
+
+        rotated = self.rotate_points(zip(xs,ys), angle)
+        translated = self.translate_points(rotated,x,y)
+
+        pygame.draw.polygon(self.screen, color, translated, 1)
+
     def draw(self):
         # Draw the interpolated line
         points = zip(self.lane.sampled_x, self.lane.sampled_y)
@@ -82,6 +130,9 @@ class App(object):
                 pygame.draw.rect(self.screen, BLACK, self.lane.support_point_rect(k), 1)
 
             self.draw_string(k, self.lane.support_x[k],self.lane.support_y[k])
+
+        # Draw car
+        self.draw_rotated_rect(self.car.x,self.car.y,self.car.size*0.8,self.car.size,self.car.theta)
 
     def input(self):
         # get mouse info
