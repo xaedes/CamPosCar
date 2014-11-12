@@ -49,7 +49,7 @@ class OneStepLookaheadController(Controller):
                 best_q = q
                 best_actions = [a]
 
-            # print q, a
+            print q, a
             qs.append(q)
         # print np.array(qs).std()
 

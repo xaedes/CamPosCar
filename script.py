@@ -185,10 +185,12 @@ class App(object):
         # Used to manage how fast the screen updates
         clock = pygame.time.Clock()
 
-        self.last_time = 0
+        self.last_time = time()
 
         # -------- Main Program Loop -----------
         while not done:
+            dt = time()-self.last_time
+            self.last_time = time()
             # --- Main event loop
             for event in pygame.event.get(): # User did something
                 if event.type == pygame.QUIT: # If user clicked close
@@ -200,7 +202,7 @@ class App(object):
                 self.controller.update(self.car)
 
                 if self.controller.action is not None:
-                    self.car.forward(self.controller.action,clock.get_time())
+                    self.car.forward(self.controller.action,dt)
             # --- Drawing code should go here
          
             # First, clear the screen to white. Don't put other drawing commands
@@ -212,7 +214,8 @@ class App(object):
             
             # --- Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
-         
+            
+
             # --- Limit to 60 frames per second
             clock.tick(60)
          

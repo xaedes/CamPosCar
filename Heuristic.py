@@ -24,23 +24,24 @@ class Heuristic(object):
 
         # update odometry
         diff = closest_idx - self.traveled
+        print "diff", np.round(diff / self.lane.path_len)
         diff -= np.round(diff / self.lane.path_len) * self.lane.path_len
         self.traveled += diff
-        score += self.traveled 
+        # score += self.traveled 
         # print self.traveled 
 
         closest = np.array(self.lane.sampled_x[closest_idx], self.lane.sampled_y[closest_idx])
         distance = math.sqrt(np.sum(np.square(closest - np.array([car.x, car.y]))))
         # print distance
-        score -= distance
+        score -= distance*distance * 10
 
         tangents = self.lane.sample_tangents()
         # print tangents 
-        print car.theta , tangents[closest_idx]
+        # print car.theta , tangents[closest_idx]
         diff = car.theta - tangents[closest_idx]
         diff -= np.round(diff / 360) * 360
-        print diff
-        score -= abs(diff)* 10
+        # print diff
+        # score -= (diff*diff)
         # print tangents[closest_idx] 
 
         # pri
