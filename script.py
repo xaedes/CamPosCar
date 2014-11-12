@@ -171,6 +171,12 @@ class App(object):
                 self.lane.add_support_point(self.lane.sampled_x[closest],self.lane.sampled_y[closest],first)
                 self.last_support_point_insert_time = time() 
 
+        if keys[pygame.K_SPACE]:
+            # save original speed
+            if not hasattr(self.car,"speed_on"):
+                self.car.speed_on = self.car.speed
+            # toggle speed
+            self.car.speed = self.car.speed_on - self.car.speed
         
     def spin(self):
         # Loop until the user clicks the close button.
