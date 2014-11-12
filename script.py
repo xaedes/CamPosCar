@@ -34,9 +34,6 @@ path_len = diffs.sum()
 x_i,y_i= interpolate.splev(np.linspace(0,1,round(path_len)),tck)
 diffs = np.sqrt(np.square(np.diff(x_i))+np.square(np.diff(y_i)))
 
-# print path_len
-print diffs.mean()
-print diffs.std()
 
 # Define some colors
 BLACK    = (   0,   0,   0)
