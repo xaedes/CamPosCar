@@ -31,3 +31,5 @@ class Car(object):
         self.x += vx
         self.y += vy
 
+        return self
+
