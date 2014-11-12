@@ -20,6 +20,7 @@ import pygame
  
 import pygame
 
+from time import time
 from scipy import interpolate
 drag_and_drop_support_point = False
 selected_support_point = None
@@ -41,6 +42,7 @@ def sampleLine(support_x,support_y,interval=5):
     return x_i,y_i
 
 x_i,y_i = sampleLine(x,y)
+last_support_point_insert_time = time()
 
 # Define some colors
 BLACK    = (   0,   0,   0)
@@ -80,6 +82,25 @@ def closestSupportPointIdx(support_x,support_y,x,y):
 
 def closestSupportPointIdxs(support_x,support_y,xs,ys):
     return [closestSupportPointIdx(support_x,support_y,x,y) for x,y in zip(xs,ys)]
+
+def closestSegment(support_x,support_y,x_i,y_i,closestSupport,x,y):
+    closestOnLine = closestPointIdx(x_i,y_i,x,y)
+    closestSupportIdx = closestPointIdx(x_i,y_i,support_x[closestSupport[closestOnLine]],support_y[closestSupport[closestOnLine]])
+    # find first support point of the closest segment
+    if closestSupport[closestOnLine] == 0 and closestOnLine > len(x_i)/2:
+        # last segment
+        first = len(support_x) - 1
+        second = 0
+    else:
+        # any other segment
+        if closestSuppIdx > closestOnLine:
+            first = closestSupport[closestOnLine] - 1
+        else:
+            first = closestSupport[closestOnLine]
+
+        second = first + 1
+
+    return first,second
 
 closestSupport = closestSupportPointIdxs(x,y,x_i,y_i)
 
@@ -152,22 +173,23 @@ while not done:
     if len(highlight) > 1:
         pygame.draw.aalines(screen, RED, False, highlight, 6)
 
-    # if right_button==1:
-    # find first support point of the closest segment
-    if closestSupport[closest] == 0 and closest > len(x_i)/2:
-        # last segment
-        first = len(x) - 1
-    else:
-        # any other segment
-        if closestSuppIdx > closest:
-            first = closestSupport[closest] - 1
-        else:
-            first = closestSupport[closest]
-
-    print first
-
+    
+    first,_=closestSegment(x,y,x_i,y_i,closestSupport,cursor[0],cursor[1])
     pygame.draw.rect(screen, GREEN, supportPointRect(x[first],y[first]), 2)
 
+    if right_button==1:
+        if time() - last_support_point_insert_time > 1:
+            first,_=closestSegment(x,y,x_i,y_i,closestSupport,cursor[0],cursor[1])
+
+            new_x,new_y = x_i[closest],y_i[closest]
+            x=x[:first+1]+[x_i[closest]]+x[first+1:]
+            y=y[:first+1]+[y_i[closest]]+y[first+1:]
+
+            x_i,y_i = sampleLine(x,y)
+            closestSupport = closestSupportPointIdxs(x,y,x_i,y_i)
+            last_support_point_insert_time = time() 
+
+    
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
  
