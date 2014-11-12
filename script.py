@@ -77,6 +77,7 @@ while not done:
 
     # move support points
     if left_button == 1 and  lane.selected is not None:
+        lane.interval = 5
         lane.move_support_point(lane.selected, cursor[0], cursor[1])
 
     keys = pygame.key.get_pressed()
@@ -88,6 +89,10 @@ while not done:
     # deselect support points
     if left_button == 0:
         lane.selected = None
+
+        if lane.interval > 1:
+            lane.interval = 1
+            lane.update()
 
     # add new support point
     if right_button==1:
