@@ -57,6 +57,9 @@ done = False
  
 # Used to manage how fast the screen updates
 clock = pygame.time.Clock()
+
+def supportPointRect(i,j):
+	return [i-support_point_size_half, j-support_point_size_half, support_point_size, support_point_size]
  
 # -------- Main Program Loop -----------
 while not done:
@@ -76,6 +79,12 @@ while not done:
     # Draw the interpolated line
     points = zip(x_i, y_i)
     pygame.draw.aalines(screen, BLACK, False, points, 2)
+
+    # Draw support points
+    support_point_size = 6
+    support_point_size_half = 3
+    for (i,j) in zip(x,y):
+    	pygame.draw.rect(screen, BLACK, supportPointRect(i,j), 1)
 
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
