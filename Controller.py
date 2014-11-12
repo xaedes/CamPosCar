@@ -3,6 +3,7 @@
 from __future__ import division    # Standardmäßig float division - Ganzzahldivision kann man explizit mit '//' durchführen
 import pygame
 from copy import copy
+import numpy as np
 
 class Controller(object):
     """docstring for Controller"""
@@ -32,15 +33,24 @@ class OneStepLookaheadController(Controller):
         super(OneStepLookaheadController, self).__init__()
         self.lane = lane
         self.heuristic = heuristic
-        self.timestep = 0.1 # in s
+        self.timestep = 100 # in s
 
     def update(self,car):
         best_q = None
-        best_action = None
+        best_actions = list()
+        qs = list()
         for a in car.actions:
             q = self.heuristic.evaluate(copy(car).forward(a,self.timestep))
-            if best_q is None or q > best_q:
+            if best_q is None:
                 best_q = q
-                best_action = a
+            if q == best_q:
+                best_actions.append(a)
+            if q > best_q:
+                best_q = q
+                best_actions = [a]
 
-        self.action = best_action
+            # print q, a
+            qs.append(q)
+        # print np.array(qs).std()
+
+        self.action = best_actions[np.random.randint(len(best_actions))]
