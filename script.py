@@ -34,6 +34,9 @@ def inRect(rect, i, j):
     x,y,w,h = rect
     return i >= x and i <= x + w - 1 and  j >= y and j <= y + h - 1
 
+
+
+
 class App(object):
     """docstring for App"""
     def __init__(self):
@@ -57,9 +60,15 @@ class App(object):
         # Set the width and height of the screen [width, height]
         self.size = (700, 500)
         self.screen = pygame.display.set_mode(self.size)
+
+        self.font = pygame.font.SysFont("calibri",40)
          
         pygame.display.set_caption("My Game")
-    
+
+    def draw_string(self,string,x,y,color=BLACK):
+        rendered = self.font.render(str(string), True,color)
+        self.screen.blit(rendered,(x,y))
+
     def draw(self):
         # Draw the interpolated line
         points = zip(self.lane.sampled_x, self.lane.sampled_y)
@@ -71,6 +80,8 @@ class App(object):
                 pygame.draw.rect(self.screen, BLACK, self.lane.support_point_rect(k), 2)
             else:
                 pygame.draw.rect(self.screen, BLACK, self.lane.support_point_rect(k), 1)
+
+            self.draw_string(k, self.lane.support_x[k],self.lane.support_y[k])
 
     def input(self):
         # get mouse info
@@ -109,7 +120,7 @@ class App(object):
                 closest = self.lane.closest_sampled_idx(cursor[0],cursor[1]) 
                 self.lane.add_support_point(self.lane.sampled_x[closest],self.lane.sampled_y[closest],first)
                 self.last_support_point_insert_time = time() 
-                
+
     def spin(self):
         # Loop until the user clicks the close button.
         done = False
