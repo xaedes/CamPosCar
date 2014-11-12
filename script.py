@@ -28,7 +28,7 @@ y=[100,100,200,200]
 x = x 
 y = y 
 
-def sampleLine(support_x,support_y,interval=1):
+def sampleLine(support_x,support_y,interval=5):
     # sample some points to determine path length
 
     tck,u=interpolate.splprep([support_x+support_x[0:1],support_y+support_y[0:1]],s=0.0,per=1)
@@ -73,7 +73,6 @@ def closestPointIdx(points_x,points_y, x, y):
     # get closest point in (points_x,points_y) too (x,y)
     distances = np.sqrt(np.square(points_x-x)+np.square(points_y-y))
     closest_idx = np.argmin(distances)
-    print closest_idx
     return closest_idx
 
 def closestSupportPointIdx(support_x,support_y,x,y):
@@ -146,9 +145,28 @@ while not done:
 
     # draw line from closest support point to closest
     closestSuppIdx=closestPointIdx(x_i,y_i,x[closestSupport[closest]],y[closestSupport[closest]])
-    highlight = points[min(closestSuppIdx,closest):max(closestSuppIdx,closest)+1]
+    if closestSupport[closest] == 0 and closest > len(x_i)/2:
+        highlight = points[closest:]
+    else:
+        highlight = points[min(closestSuppIdx,closest):max(closestSuppIdx,closest)+1]
     if len(highlight) > 1:
         pygame.draw.aalines(screen, RED, False, highlight, 6)
+
+    # if right_button==1:
+    # find first support point of the closest segment
+    if closestSupport[closest] == 0 and closest > len(x_i)/2:
+        # last segment
+        first = len(x) - 1
+    else:
+        # any other segment
+        if closestSuppIdx > closest:
+            first = closestSupport[closest] - 1
+        else:
+            first = closestSupport[closest]
+
+    print first
+
+    pygame.draw.rect(screen, GREEN, supportPointRect(x[first],y[first]), 2)
 
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
