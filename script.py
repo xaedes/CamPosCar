@@ -19,7 +19,13 @@ import pygame
 """
  
 import pygame
- 
+
+from scipy import interpolate
+x=[100,200,200,100,100]
+y=[100,100,200,200,100]
+tck,u=interpolate.splprep([x,y],s=0.0)
+x_i,y_i= interpolate.splev(np.linspace(0,1,100),tck)
+
 # Define some colors
 BLACK    = (   0,   0,   0)
 WHITE    = ( 255, 255, 255)
@@ -55,6 +61,10 @@ while not done:
     # above this, or they will be erased with this command.
     screen.fill(WHITE)
  
+    # Draw the interpolated line
+    points = zip(x_i, y_i)
+    pygame.draw.aalines(screen, BLACK, False, points, 2)
+
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
  
