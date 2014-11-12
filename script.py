@@ -23,6 +23,8 @@ import pygame
 from time import time
 
 from Lane import Lane
+from Controller import *
+from Car import Car
 import math
 from copy import copy
 # Define some colors
@@ -37,55 +39,6 @@ def inRect(rect, i, j):
 
 d2r = math.pi / 180
 
-class Car(object):
-    """docstring for Car"""
-    def __init__(self, x, y, theta, speed=0.1, max_steer=0.2, size=10):
-        super(Car, self).__init__()
-        self.x = x
-        self.y = y
-        self.theta = theta # in degree
-        self.size = size
-        self.speed = speed # px / s
-        self.actions = np.array([-1,0,1])
-        self.max_steer = max_steer # in degree/s
-    def steers(self):
-        return self.actions * self.max_steer
-        # self.theta_rate =  10 # in degree/s
-
-    def forward(self,action,dt):
-        assert action in [-1,0,1]
-    #     # action == -1  : left
-    #     # action ==  0  : middle
-    #     # action ==  1  : right
-        steer = action * self.max_steer
-        print steer
-        self.theta -= steer * dt 
-        vx = math.cos(self.theta*d2r) * self.speed * dt
-        vy = math.sin(self.theta*d2r) * self.speed * dt
-        self.x += vx
-        self.y += vy
-
-class Controller(object):
-    """docstring for Controller"""
-    def __init__(self):
-        super(Controller, self).__init__()
-        self.action = None
-
-    def update(self):
-        pass
-
-class HumanController(Controller):
-    """docstring for HumanController"""
-    def __init__(self):
-        super(HumanController, self).__init__()
-    
-    def update(self):
-        keys = pygame.key.get_pressed()
-        self.action = 0
-        if keys[pygame.K_LEFT]:
-            self.action += 1
-        if keys[pygame.K_RIGHT]:
-            self.action -= 1
 
 class App(object):
     """docstring for App"""
