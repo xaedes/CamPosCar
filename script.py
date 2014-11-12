@@ -21,19 +21,24 @@ import pygame
 import pygame
 
 from scipy import interpolate
+drag_and_drop_support_point = False
+selected_support_point = None
 x=[100,200,200,100,100]
 y=[100,100,200,200,100]
-tck,u=interpolate.splprep([x,y],s=0.0)
 
-# sample some points to determine path length
-x_i,y_i= interpolate.splev(np.linspace(0,1,50),tck)
-diffs = np.sqrt(np.square(np.diff(x_i))+np.square(np.diff(y_i)))
-path_len = diffs.sum()
-# we want to sample the points so that the distance between neighboring points is just 1
-# so sample round(path_len) points
-x_i,y_i= interpolate.splev(np.linspace(0,1,round(path_len)),tck)
-diffs = np.sqrt(np.square(np.diff(x_i))+np.square(np.diff(y_i)))
 
+def sampleLine(support_x,support_y,interval=1):
+    # sample some points to determine path length
+    tck,u=interpolate.splprep([support_x,support_y],s=0.0)
+    x_i,y_i= interpolate.splev(np.linspace(0,1,50),tck)
+    diffs = np.sqrt(np.square(np.diff(x_i))+np.square(np.diff(y_i)))
+    path_len = diffs.sum()
+    # we want to sample the points so that the distance between neighboring points is just interval
+    # so sample round(path_len) points
+    x_i,y_i= interpolate.splev(np.linspace(0,1,round(path_len/interval)),tck)
+    return x_i,y_i
+
+x_i,y_i = sampleLine(x,y)
 
 # Define some colors
 BLACK    = (   0,   0,   0)
@@ -56,8 +61,13 @@ done = False
 clock = pygame.time.Clock()
 
 def supportPointRect(i,j):
-	return [i-support_point_size_half, j-support_point_size_half, support_point_size, support_point_size]
- 
+    return [i-support_point_size_half, j-support_point_size_half, support_point_size, support_point_size]
+
+def inRect(rect, i, j):
+    x,y,w,h = rect
+    return i >= x and i <= x + w - 1 and  j >= y and j <= y + h - 1
+
+
 # -------- Main Program Loop -----------
 while not done:
     # --- Main event loop
@@ -80,8 +90,34 @@ while not done:
     # Draw support points
     support_point_size = 6
     support_point_size_half = 3
-    for (i,j) in zip(x,y):
-    	pygame.draw.rect(screen, BLACK, supportPointRect(i,j), 1)
+    for (k,i,j) in zip(range(len(x)),x,y):
+        if selected_support_point == k:
+            pygame.draw.rect(screen, BLACK, supportPointRect(i,j), 2)
+        else:
+            pygame.draw.rect(screen, BLACK, supportPointRect(i,j), 1)
+
+    # get mouse info
+    cursor = pygame.mouse.get_pos()
+    (left_button, middle_button, right_button) = pygame.mouse.get_pressed() 
+    
+    # select support points
+    if left_button == 1 and not drag_and_drop_support_point:
+        for (k,i,j) in zip(range(len(x)),x,y):
+            if inRect(supportPointRect(i,j),cursor[0],cursor[1]):
+                drag_and_drop_support_point = True
+                selected_support_point = k
+
+    # move support points
+    if left_button == 1 and drag_and_drop_support_point and selected_support_point is not None:
+        x[selected_support_point] = cursor[0]
+        y[selected_support_point] = cursor[1]
+        x_i,y_i = sampleLine(x,y)
+        
+
+    # deselect support points
+    if left_button == 0:
+        drag_and_drop_support_point = False
+        selected_support_point = None
 
     # --- Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
