@@ -93,7 +93,7 @@ def closestSegment(support_x,support_y,x_i,y_i,closestSupport,x,y):
         second = 0
     else:
         # any other segment
-        if closestSuppIdx > closestOnLine:
+        if closestSupportIdx > closestOnLine:
             first = closestSupport[closestOnLine] - 1
         else:
             first = closestSupport[closestOnLine]
@@ -137,7 +137,7 @@ while not done:
             drag_and_drop_support_point = False
             x_i,y_i = sampleLine(x,y)
             closestSupport = closestSupportPointIdxs(x,y,x_i,y_i)            
-            
+
     # deselect support points
     if left_button == 0:
         drag_and_drop_support_point = False
@@ -164,35 +164,13 @@ while not done:
         else:
             pygame.draw.rect(screen, BLACK, supportPointRect(i,j), 1)
 
-    # Draw line from mouse to closest point line
-    closest = closestPointIdx(x_i,y_i,cursor[0],cursor[1])
-    pygame.draw.aaline(screen, BLACK, 
-        (cursor[0],cursor[1]), 
-        (x_i[closest],y_i[closest]))
-
-    # highlight support point that is nearest to closest
-    pygame.draw.rect(screen, BLACK, supportPointRect(x[closestSupport[closest]],y[closestSupport[closest]]), 2)
-
-    # draw line from closest support point to closest
-    closestSuppIdx=closestPointIdx(x_i,y_i,x[closestSupport[closest]],y[closestSupport[closest]])
-    if closestSupport[closest] == 0 and closest > len(x_i)/2:
-        highlight = points[closest:]
-    else:
-        highlight = points[min(closestSuppIdx,closest):max(closestSuppIdx,closest)+1]
-    if len(highlight) > 1:
-        pygame.draw.aalines(screen, RED, False, highlight, 6)
-
-    
-    first,_=closestSegment(x,y,x_i,y_i,closestSupport,cursor[0],cursor[1])
-    pygame.draw.rect(screen, GREEN, supportPointRect(x[first],y[first]), 2)
 
     if right_button==1:
         if time() - last_support_point_insert_time > 1:
             first,_=closestSegment(x,y,x_i,y_i,closestSupport,cursor[0],cursor[1])
-
-            new_x,new_y = x_i[closest],y_i[closest]
-            x=x[:first+1]+[x_i[closest]]+x[first+1:]
-            y=y[:first+1]+[y_i[closest]]+y[first+1:]
+            closestOnLine = closestPointIdx(x_i,y_i,cursor[0],cursor[1])
+            x=x[:first+1]+[x_i[closestOnLine]]+x[first+1:]
+            y=y[:first+1]+[y_i[closestOnLine]]+y[first+1:]
 
             x_i,y_i = sampleLine(x,y)
             closestSupport = closestSupportPointIdxs(x,y,x_i,y_i)
