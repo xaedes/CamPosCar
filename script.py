@@ -65,7 +65,27 @@ class Car(object):
         self.x += vx
         self.y += vy
 
+class Controller(object):
+    """docstring for Controller"""
+    def __init__(self):
+        super(Controller, self).__init__()
+        self.action = None
 
+    def update(self):
+        pass
+
+class HumanController(Controller):
+    """docstring for HumanController"""
+    def __init__(self):
+        super(HumanController, self).__init__()
+    
+    def update(self):
+        keys = pygame.key.get_pressed()
+        self.action = 0
+        if keys[pygame.K_LEFT]:
+            self.action += 1
+        if keys[pygame.K_RIGHT]:
+            self.action -= 1
 
 class App(object):
     """docstring for App"""
@@ -82,6 +102,8 @@ class App(object):
 
         self.car = Car(x=150,y=100,theta=45)
         self.action = None
+        self.human = HumanController()
+        self.controller = self.human
 
         self.last_support_point_insert_time = time() 
 
@@ -143,14 +165,14 @@ class App(object):
 
         # Draw car
         self.draw_rotated_rect(self.car.x,self.car.y,self.car.size,self.car.size*0.8,self.car.theta)
-        if self.action is not None:
+        if self.controller is not None and self.controller.action is not None:
             action_lines={}
             m = self.car.size * 1.10
             l = self.car.size * 0.5
             for a in self.car.actions:
                 action_line = self.translate_points(self.rotate_points([(0,0),(m,-a*l)],self.car.theta),self.car.x,self.car.y)
-                color = DARKBLUE if self.action == a else BLACK
-                width = 2 if self.action == a else 1
+                color = DARKBLUE if self.controller.action == a else BLACK
+                width = 2 if self.controller.action == a else 1
                 # print action_line
                 pygame.draw.lines(self.screen,color,False,action_line,width)
         
@@ -193,11 +215,7 @@ class App(object):
                 self.lane.add_support_point(self.lane.sampled_x[closest],self.lane.sampled_y[closest],first)
                 self.last_support_point_insert_time = time() 
 
-        self.action = 0
-        if keys[pygame.K_LEFT]:
-            self.action += 1
-        if keys[pygame.K_RIGHT]:
-            self.action -= 1
+        
     def spin(self):
         # Loop until the user clicks the close button.
         done = False
@@ -215,10 +233,12 @@ class App(object):
                     done = True # Flag that we are done so we exit this loop
             self.input()
 
-
             # --- Game logic should go here
-            if self.action is not None:
-                self.car.forward(self.action,clock.get_time())
+            if self.controller is not None:
+                self.controller.update()
+
+                if self.controller.action is not None:
+                    self.car.forward(self.controller.action,clock.get_time())
             # --- Drawing code should go here
          
             # First, clear the screen to white. Don't put other drawing commands
