@@ -24,6 +24,7 @@ from time import time
 
 from Lane import Lane
 from Controller import *
+from Heuristic import Heuristic
 from Car import Car
 import math
 from copy import copy
@@ -56,7 +57,9 @@ class App(object):
         self.car = Car(x=150,y=100,theta=45)
         self.action = None
         self.human = HumanController()
-        self.controller = self.human
+        self.heuristic = Heuristic(self.lane)
+        self.onestep = OneStepLookaheadController(self.lane,self.heuristic)
+        self.controller = self.onestep
 
         self.last_support_point_insert_time = time() 
 
@@ -188,7 +191,7 @@ class App(object):
 
             # --- Game logic should go here
             if self.controller is not None:
-                self.controller.update()
+                self.controller.update(self.car)
 
                 if self.controller.action is not None:
                     self.car.forward(self.controller.action,clock.get_time())
