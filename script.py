@@ -24,7 +24,19 @@ from scipy import interpolate
 x=[100,200,200,100,100]
 y=[100,100,200,200,100]
 tck,u=interpolate.splprep([x,y],s=0.0)
-x_i,y_i= interpolate.splev(np.linspace(0,1,100),tck)
+
+# sample some points to determine path length
+x_i,y_i= interpolate.splev(np.linspace(0,1,50),tck)
+diffs = np.sqrt(np.square(np.diff(x_i))+np.square(np.diff(y_i)))
+path_len = diffs.sum()
+# we want to sample the points so that the distance between neighboring points is just 1
+# so sample round(path_len) points
+x_i,y_i= interpolate.splev(np.linspace(0,1,round(path_len)),tck)
+diffs = np.sqrt(np.square(np.diff(x_i))+np.square(np.diff(y_i)))
+
+# print path_len
+print diffs.mean()
+print diffs.std()
 
 # Define some colors
 BLACK    = (   0,   0,   0)
