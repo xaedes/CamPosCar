@@ -24,7 +24,7 @@ from time import time
 
 from Lane import Lane
 import math
-
+from copy import copy
 # Define some colors
 BLACK    = (   0,   0,   0)
 WHITE    = ( 255, 255, 255)
@@ -35,28 +35,35 @@ def inRect(rect, i, j):
     x,y,w,h = rect
     return i >= x and i <= x + w - 1 and  j >= y and j <= y + h - 1
 
+d2r = math.pi / 180
 
 class Car(object):
     """docstring for Car"""
-    def __init__(self, x, y, theta, speed=1, size=10):
+    def __init__(self, x, y, theta, speed=0.1, max_steer=0.2, size=10):
         super(Car, self).__init__()
         self.x = x
         self.y = y
         self.theta = theta # in degree
         self.size = size
         self.speed = speed # px / s
+        self.actions = np.array([-1,0,1])
+        self.max_steer = max_steer # in degree/s
+    def steers(self):
+        return self.actions * self.max_steer
         # self.theta_rate =  10 # in degree/s
 
-    # def forward(self,action,dt):
-    #     assert action in [-1,0,1]
+    def forward(self,action,dt):
+        assert action in [-1,0,1]
     #     # action == -1  : left
     #     # action ==  0  : middle
     #     # action ==  1  : right
-    #     vx = math.cos(self.theta) * self.speed * dt
-    #     vy = math.sin(self.theta) * self.speed * dt
-    #     self.x += vx
-    #     self.y += vy
-    #     self.theta -= self.theta_rate * dt * action
+        steer = action * self.max_steer
+        print steer
+        self.theta -= steer * dt 
+        vx = math.cos(self.theta*d2r) * self.speed * dt
+        vy = math.sin(self.theta*d2r) * self.speed * dt
+        self.x += vx
+        self.y += vy
 
 
 
@@ -74,6 +81,7 @@ class App(object):
         self.lane.add_support_point(100,200)
 
         self.car = Car(x=150,y=100,theta=45)
+        self.action = None
 
         self.last_support_point_insert_time = time() 
 
@@ -94,10 +102,12 @@ class App(object):
         rendered = self.font.render(str(string), True,color)
         self.screen.blit(rendered,(x,y))
 
-    def rotate_points(self,points,angle):
+    def rotate_points(self,points,angle,at=(0,0)):
+        ax, ay = at
         d2r=math.pi/180
         cs,sn=math.cos(angle*d2r),math.sin(angle*d2r)
-        return [(i * cs - j * sn,i * sn + j * cs) for (i,j) in points]
+        return [(ax+(i-ax) * cs - (j-ay) * sn,ay+(i-ax) * sn + (j-ay) * cs) for (i,j) in points]
+    
     def translate_points(self,points,x,y):
         return [(i+x,j+y) for (i,j) in points]
 
@@ -132,7 +142,8 @@ class App(object):
             self.draw_string(k, self.lane.support_x[k],self.lane.support_y[k])
 
         # Draw car
-        self.draw_rotated_rect(self.car.x,self.car.y,self.car.size*0.8,self.car.size,self.car.theta)
+        self.draw_rotated_rect(self.car.x,self.car.y,self.car.size,self.car.size*0.8,self.car.theta)
+        # self.rotate_points(,)
 
     def input(self):
         # get mouse info
@@ -172,6 +183,11 @@ class App(object):
                 self.lane.add_support_point(self.lane.sampled_x[closest],self.lane.sampled_y[closest],first)
                 self.last_support_point_insert_time = time() 
 
+        self.action = 0
+        if keys[pygame.K_LEFT]:
+            self.action -= 1
+        if keys[pygame.K_RIGHT]:
+            self.action += 1
     def spin(self):
         # Loop until the user clicks the close button.
         done = False
@@ -179,7 +195,7 @@ class App(object):
         # Used to manage how fast the screen updates
         clock = pygame.time.Clock()
 
-        
+        self.last_time = 0
 
         # -------- Main Program Loop -----------
         while not done:
@@ -189,8 +205,10 @@ class App(object):
                     done = True # Flag that we are done so we exit this loop
             self.input()
 
+
             # --- Game logic should go here
-         
+            if self.action is not None:
+                self.car.forward(self.action,clock.get_time())
             # --- Drawing code should go here
          
             # First, clear the screen to white. Don't put other drawing commands
