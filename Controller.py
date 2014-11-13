@@ -34,7 +34,7 @@ class OneStepLookaheadController(Controller):
         super(OneStepLookaheadController, self).__init__()
         self.lane = lane
         self.heuristic = heuristic
-        self.timestep = 100 # in s
+        self.timestep = 0.1 # in s
 
     def update(self,car):
         origin = Node(car)
