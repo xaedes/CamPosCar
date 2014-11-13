@@ -29,11 +29,9 @@ class Draw(object):
         n = int(length / interval)
         points = np.vstack([np.linspace(point1[0],point2[0],n),
                             np.linspace(point1[1],point2[1],n)])
-        print points.shape
         color1 = np.array(color1)
         color2 = np.array(color2)
         for i in range(n-1):
             color = (color2 - color1)*i/(n-1)+color1
             # print  points[i], points[i+1]
             pygame.draw.line(screen, color, points[:,i], points[:,i+1], width)
-        print points
