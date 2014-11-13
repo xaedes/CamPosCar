@@ -125,7 +125,7 @@ class App(object):
         # Draw support points
         for k in range(self.lane.n_support):
             if self.lane.highlight == k:
-                pygame.draw.circle(self.screen, HIGHLIGHT, (int(self.lane.support_x[k]),int(self.lane.support_y[k])), int(self.lane.highlight_radius), 0)
+                pygame.draw.circle(self.screen, Draw.HIGHLIGHT, (int(self.lane.support_x[k]),int(self.lane.support_y[k])), int(self.lane.highlight_radius), 0)
             if self.lane.selected == k:
                 pygame.draw.rect(self.screen, Draw.WHITE, self.lane.support_point_rect(k), 2)
             else:
@@ -241,6 +241,7 @@ class App(object):
             self.last_time = time()
             # --- Main event loop
             for event in pygame.event.get(): # User did something
+                print event.type
                 if event.type == pygame.QUIT: # If user clicked close
                     done = True # Flag that we are done so we exit this loop
             self.input()
