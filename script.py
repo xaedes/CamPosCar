@@ -27,17 +27,13 @@ from Controller import *
 from Heuristic import Heuristic
 from Car import Car
 from Grid import Grid
+from Draw import Draw
+from Window import Window
+from Events import Events
 
 import math
 from copy import copy
 # Define some colors
-BLACK     = (   0,   0,   0)
-WHITE     = ( 255, 255, 255)
-GREEN     = (   0, 255,   0)
-RED       = ( 255,   0,   0)
-DARKBLUE  = (   0,   0, 128)
-LIGHTGRAY = ( 222, 222, 222)
-HIGHLIGHT = ( 247, 255, 216)
 def inRect(rect, i, j):
     x,y,w,h = rect
     return i >= x and i <= x + w - 1 and  j >= y and j <= y + h - 1
@@ -66,6 +62,10 @@ class App(object):
         self.onestep = OneStepLookaheadController(self.lane,self.heuristic)
         self.controller = self.human
 
+        self.events = Events()
+
+        self.window = Window(self.screen, self.events, 300, 200, "caption")
+
         self.last_support_point_insert_time = time() 
 
         self.grid = Grid(50,50,*self.size)
@@ -84,9 +84,8 @@ class App(object):
          
         pygame.display.set_caption("My Game")
 
-    def draw_string(self,string,x,y,color=BLACK):
-        rendered = self.font.render(str(string), True,color)
-        self.screen.blit(rendered,(x,y))
+    def draw_string(self,string,x,y,color=Draw.BLACK):
+        Draw.draw_string(self.screen,self.font,string,x,y,color)
 
     def rotate_points(self,points,angle,at=(0,0)):
         ax, ay = at
@@ -97,7 +96,7 @@ class App(object):
     def translate_points(self,points,x,y):
         return [(i+x,j+y) for (i,j) in points]
 
-    def draw_rotated_rect(self,x,y,w,h,angle,color=BLACK):
+    def draw_rotated_rect(self,x,y,w,h,angle,color=Draw.BLACK):
         xs=[-w/2,
            w/2,
            w/2,
@@ -121,32 +120,33 @@ class App(object):
         # Draw the interpolated line
         points = zip(self.lane.sampled_x, self.lane.sampled_y)
         if len(points) > 1:
-            pygame.draw.aalines(self.screen, WHITE, False, points, 2)
+            pygame.draw.aalines(self.screen, Draw.WHITE, False, points, 2)
 
         # Draw support points
         for k in range(self.lane.n_support):
             if self.lane.highlight == k:
                 pygame.draw.circle(self.screen, HIGHLIGHT, (int(self.lane.support_x[k]),int(self.lane.support_y[k])), int(self.lane.highlight_radius), 0)
             if self.lane.selected == k:
-                pygame.draw.rect(self.screen, WHITE, self.lane.support_point_rect(k), 2)
+                pygame.draw.rect(self.screen, Draw.WHITE, self.lane.support_point_rect(k), 2)
             else:
-                pygame.draw.rect(self.screen, WHITE, self.lane.support_point_rect(k), 1)
+                pygame.draw.rect(self.screen, Draw.WHITE, self.lane.support_point_rect(k), 1)
 
             # self.draw_string(k, self.lane.support_x[k],self.lane.support_y[k])
 
         # Draw car
-        self.draw_rotated_rect(self.car.x,self.car.y,self.car.size,self.car.size*0.8,self.car.theta,WHITE)
+        self.draw_rotated_rect(self.car.x,self.car.y,self.car.size,self.car.size*0.8,self.car.theta,Draw.WHITE)
         if self.controller is not None and self.controller.action is not None:
             action_lines={}
             m = self.car.size * 1.10
             l = self.car.size * 0.5
             for a in self.car.actions:
                 action_line = self.translate_points(self.rotate_points([(0,0),(m,-a*l)],self.car.theta),self.car.x,self.car.y)
-                color = DARKBLUE if self.controller.action == a else WHITE
+                color = Draw.DARKBLUE if self.controller.action == a else Draw.WHITE
                 width = 2 if self.controller.action == a else 1
                 # print action_line
                 pygame.draw.lines(self.screen,color,False,action_line,width)
 
+        self.window.draw()
 
     
     def distance_between(self, a, b):
@@ -256,7 +256,7 @@ class App(object):
          
             # First, clear the screen to white. Don't put other drawing commands
             # above this, or they will be erased with this command.
-            self.screen.fill(WHITE)
+            self.screen.fill(Draw.WHITE)
          
             self.draw()
             
