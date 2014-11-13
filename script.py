@@ -74,7 +74,7 @@ class App(object):
         self.size = (700, 500)
         self.screen = pygame.display.set_mode(self.size)
 
-        self.font = pygame.font.SysFont("calibri",40)
+        self.font = pygame.font.SysFont("arial",10)
          
         pygame.display.set_caption("My Game")
 
