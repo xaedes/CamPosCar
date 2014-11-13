@@ -59,7 +59,7 @@ class App(object):
         self.human = HumanController()
         self.heuristic = Heuristic(self.lane)
         self.onestep = OneStepLookaheadController(self.lane,self.heuristic)
-        self.controller = self.onestep
+        self.controller = self.human
 
         self.last_support_point_insert_time = time() 
 
@@ -178,6 +178,9 @@ class App(object):
             # toggle speed
             self.car.speed = self.car.speed_on - self.car.speed
         
+        if keys[pygame.K_RETURN]:
+            self.controller = self.human if self.controller != self.human else self.onestep
+
     def spin(self):
         # Loop until the user clicks the close button.
         done = False
