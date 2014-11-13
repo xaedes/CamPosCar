@@ -7,14 +7,14 @@ d2r = math.pi / 180
 
 class Car(object):
     """docstring for Car"""
-    def __init__(self, x, y, theta, speed=20, max_steer=5/(1/60), size=10):
+    def __init__(self, x, y, theta, speed=90, max_steer=15/(1/60), size=10):
         super(Car, self).__init__()
         self.x = x
         self.y = y
         self.theta = theta # in degree
         self.size = size
         self.speed = speed # px / s
-        self.actions = np.linspace(-1,1,7)
+        self.actions = np.linspace(-1,1,3)
         self.max_steer = max_steer # in degree/s
     def steers(self):
         return self.actions * self.max_steer
