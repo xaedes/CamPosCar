@@ -30,8 +30,8 @@ class Heuristic(object):
         # score += self.traveled 
         # print self.traveled 
 
-        closest = np.array(self.lane.sampled_x[closest_idx], self.lane.sampled_y[closest_idx])
-        distance = math.sqrt(np.sum(np.square(closest - np.array([node.car.x, node.car.y]))))
+        diff = np.array([self.lane.sampled_x[closest_idx]-node.car.x,self.lane.sampled_y[closest_idx]-node.car.y])
+        distance = math.sqrt(np.sum(np.square(diff)))
         # print distance
         score -= distance*distance * 10
 
