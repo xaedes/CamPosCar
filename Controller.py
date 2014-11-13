@@ -4,6 +4,7 @@ from __future__ import division    # Standardmäßig float division - Ganzzahldi
 import pygame
 from copy import copy
 import numpy as np
+from Node import Node
 
 class Controller(object):
     """docstring for Controller"""
@@ -36,11 +37,13 @@ class OneStepLookaheadController(Controller):
         self.timestep = 100 # in s
 
     def update(self,car):
+        origin = Node(car)
         best_q = None
         best_actions = list()
         qs = list()
         for a in car.actions:
-            q = self.heuristic.evaluate(copy(car).forward(a,self.timestep))
+            node = origin.advance(a,self.timestep)
+            q = self.heuristic.evaluate(node)
             if best_q is None:
                 best_q = q
             if q == best_q:

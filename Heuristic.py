@@ -14,9 +14,9 @@ class Heuristic(object):
         self.lane = lane
         self.traveled = None
 
-    def evaluate(self, car):
+    def evaluate(self, node):
         score = 0
-        closest_idx = self.lane.closest_sampled_idx(car.x, car.y)
+        closest_idx = self.lane.closest_sampled_idx(node.car.x, node.car.y)
 
         # initialize odometry
         if self.traveled is None:
@@ -31,7 +31,7 @@ class Heuristic(object):
         # print self.traveled 
 
         closest = np.array(self.lane.sampled_x[closest_idx], self.lane.sampled_y[closest_idx])
-        distance = math.sqrt(np.sum(np.square(closest - np.array([car.x, car.y]))))
+        distance = math.sqrt(np.sum(np.square(closest - np.array([node.car.x, node.car.y]))))
         # print distance
         score -= distance*distance * 10
 
