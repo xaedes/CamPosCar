@@ -132,7 +132,7 @@ class App(object):
             else:
                 pygame.draw.rect(self.screen, WHITE, self.lane.support_point_rect(k), 1)
 
-            self.draw_string(k, self.lane.support_x[k],self.lane.support_y[k])
+            # self.draw_string(k, self.lane.support_x[k],self.lane.support_y[k])
 
         # Draw car
         self.draw_rotated_rect(self.car.x,self.car.y,self.car.size,self.car.size*0.8,self.car.theta,WHITE)
