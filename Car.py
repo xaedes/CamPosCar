@@ -24,8 +24,8 @@ class Car(object):
     #     # action == -1  : left
     #     # action ==  0  : middle
     #     # action ==  1  : right
-    	if dt > 0:
-    		print 1/dt
+    	# if dt > 0:
+    		# print 1/dt
     		# print 1/dt
         steer = action * self.max_steer
         self.theta -= steer * dt 
