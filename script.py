@@ -26,6 +26,8 @@ from Lane import Lane
 from Controller import *
 from Heuristic import Heuristic
 from Car import Car
+from Grid import Grid
+
 import math
 from copy import copy
 # Define some colors
@@ -56,6 +58,7 @@ class App(object):
         self.lane.add_support_point(200,200)
         self.lane.add_support_point(100,200)
 
+
         self.car = Car(x=150,y=100,theta=45)
         self.action = None
         self.human = HumanController()
@@ -64,6 +67,9 @@ class App(object):
         self.controller = self.human
 
         self.last_support_point_insert_time = time() 
+
+        self.grid = Grid(50,50,*self.size)
+        self.update_distance_grid()
 
         self.spin()
 
@@ -107,35 +113,41 @@ class App(object):
 
         pygame.draw.polygon(self.screen, color, translated, 1)
 
+
     def draw(self):
+
+        self.grid.draw(self.screen)
+
         # Draw the interpolated line
         points = zip(self.lane.sampled_x, self.lane.sampled_y)
         if len(points) > 1:
-            pygame.draw.aalines(self.screen, BLACK, False, points, 2)
+            pygame.draw.aalines(self.screen, WHITE, False, points, 2)
 
         # Draw support points
         for k in range(self.lane.n_support):
             if self.lane.highlight == k:
                 pygame.draw.circle(self.screen, HIGHLIGHT, (int(self.lane.support_x[k]),int(self.lane.support_y[k])), int(self.lane.highlight_radius), 0)
             if self.lane.selected == k:
-                pygame.draw.rect(self.screen, BLACK, self.lane.support_point_rect(k), 2)
+                pygame.draw.rect(self.screen, WHITE, self.lane.support_point_rect(k), 2)
             else:
-                pygame.draw.rect(self.screen, BLACK, self.lane.support_point_rect(k), 1)
+                pygame.draw.rect(self.screen, WHITE, self.lane.support_point_rect(k), 1)
 
             self.draw_string(k, self.lane.support_x[k],self.lane.support_y[k])
 
         # Draw car
-        self.draw_rotated_rect(self.car.x,self.car.y,self.car.size,self.car.size*0.8,self.car.theta)
+        self.draw_rotated_rect(self.car.x,self.car.y,self.car.size,self.car.size*0.8,self.car.theta,WHITE)
         if self.controller is not None and self.controller.action is not None:
             action_lines={}
             m = self.car.size * 1.10
             l = self.car.size * 0.5
             for a in self.car.actions:
                 action_line = self.translate_points(self.rotate_points([(0,0),(m,-a*l)],self.car.theta),self.car.x,self.car.y)
-                color = DARKBLUE if self.controller.action == a else BLACK
+                color = DARKBLUE if self.controller.action == a else WHITE
                 width = 2 if self.controller.action == a else 1
                 # print action_line
                 pygame.draw.lines(self.screen,color,False,action_line,width)
+
+
     
     def distance_between(self, a, b):
         return math.sqrt(np.sum(np.square(np.array(a)-np.array(b))))
@@ -157,12 +169,15 @@ class App(object):
         if left_button == 1 and  self.lane.selected is not None:
             self.lane.interval = 5
             self.lane.move_support_point(self.lane.selected, cursor[0], cursor[1])
+            self.update_distance_grid()
 
         keys = pygame.key.get_pressed()
         if self.lane.selected is not None:
             if keys[pygame.K_DELETE]:
                 self.lane.remove_support_point(self.lane.selected)
                 self.lane.selected = None
+                self.update_distance_grid()
+
 
         # deselect support points
         if left_button == 0:
@@ -186,6 +201,8 @@ class App(object):
                 closest = self.lane.closest_sampled_idx(cursor[0],cursor[1]) 
                 self.lane.add_support_point(self.lane.sampled_x[closest],self.lane.sampled_y[closest],first)
                 self.last_support_point_insert_time = time() 
+                self.update_distance_grid()
+
 
         if keys[pygame.K_SPACE]:
             # save original speed
@@ -196,6 +213,18 @@ class App(object):
         
         if keys[pygame.K_RETURN]:
             self.controller = self.human if self.controller != self.human else self.onestep
+
+    def update_distance_grid(self):
+        for i in range(self.grid.width):
+            for j in range(self.grid.height):
+                x,y = self.grid.xs[i], self.grid.ys[j]
+
+                closest_idx = self.lane.closest_sampled_idx(x, y)
+                diff = np.array([self.lane.sampled_x[closest_idx]-x,self.lane.sampled_y[closest_idx]-y])
+                distance = math.sqrt(np.sum(np.square(diff)))
+
+                self.grid.data[i,j] = distance*distance
+        
 
     def spin(self):
         # Loop until the user clicks the close button.
@@ -222,6 +251,7 @@ class App(object):
 
                 if self.controller.action is not None:
                     self.car.forward(self.controller.action,dt)
+
             # --- Drawing code should go here
          
             # First, clear the screen to white. Don't put other drawing commands
