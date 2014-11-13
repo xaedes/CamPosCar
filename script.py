@@ -110,7 +110,8 @@ class App(object):
     def draw(self):
         # Draw the interpolated line
         points = zip(self.lane.sampled_x, self.lane.sampled_y)
-        pygame.draw.aalines(self.screen, BLACK, False, points, 2)
+        if len(points) > 1:
+            pygame.draw.aalines(self.screen, BLACK, False, points, 2)
 
         # Draw support points
         for k in range(self.lane.n_support):
