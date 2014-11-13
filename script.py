@@ -29,11 +29,13 @@ from Car import Car
 import math
 from copy import copy
 # Define some colors
-BLACK    = (   0,   0,   0)
-WHITE    = ( 255, 255, 255)
-GREEN    = (   0, 255,   0)
-RED      = ( 255,   0,   0)
-DARKBLUE = (   0,   0, 128)
+BLACK     = (   0,   0,   0)
+WHITE     = ( 255, 255, 255)
+GREEN     = (   0, 255,   0)
+RED       = ( 255,   0,   0)
+DARKBLUE  = (   0,   0, 128)
+LIGHTGRAY = ( 222, 222, 222)
+HIGHLIGHT = ( 247, 255, 216)
 def inRect(rect, i, j):
     x,y,w,h = rect
     return i >= x and i <= x + w - 1 and  j >= y and j <= y + h - 1
@@ -112,6 +114,8 @@ class App(object):
 
         # Draw support points
         for k in range(self.lane.n_support):
+            if self.lane.highlight == k:
+                pygame.draw.circle(self.screen, HIGHLIGHT, (int(self.lane.support_x[k]),int(self.lane.support_y[k])), int(self.lane.highlight_radius), 0)
             if self.lane.selected == k:
                 pygame.draw.rect(self.screen, BLACK, self.lane.support_point_rect(k), 2)
             else:
@@ -131,7 +135,9 @@ class App(object):
                 width = 2 if self.controller.action == a else 1
                 # print action_line
                 pygame.draw.lines(self.screen,color,False,action_line,width)
-        
+    
+    def distance_between(self, a, b):
+        return math.sqrt(np.sum(np.square(np.array(a)-np.array(b))))
 
     def input(self):
         # get mouse info
@@ -140,8 +146,10 @@ class App(object):
         
         # select support points
         if left_button == 1 and self.lane.selected is None:
-            for k in range(self.lane.n_support):
-                if inRect(self.lane.support_point_rect(k),cursor[0],cursor[1]):
+            # for k in range(self.lane.n_support):
+            for (x,y,k) in zip(self.lane.support_x,self.lane.support_y,range(self.lane.n_support)):
+                if self.distance_between((x,y),cursor) < self.lane.highlight_radius:
+                # if inRect(self.lane.support_point_rect(k),cursor[0],cursor[1]):
                     self.lane.selected = k
 
         # move support points
@@ -162,6 +170,13 @@ class App(object):
             if self.lane.interval > 1:
                 self.lane.interval = 1
                 self.lane.update()
+
+        self.lane.highlight = None
+        for (x,y,k) in zip(self.lane.support_x,self.lane.support_y,range(self.lane.n_support)):
+            if self.distance_between((x,y),cursor) < self.lane.highlight_radius:
+                self.lane.highlight = k
+                
+
 
         # add new support point
         if right_button==1:

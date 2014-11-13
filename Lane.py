@@ -19,6 +19,8 @@ class Lane(object):
         self.interval = interval
         self.size = size
         self.path_len = 0
+        self.highlight_radius = self.size * math.sqrt(2) * 1
+        self.highlight = None
         self.selected = None
 
     def add_support_point(self, x,y,before=-1):
