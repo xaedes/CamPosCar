@@ -7,7 +7,7 @@ d2r = math.pi / 180
 
 class Car(object):
     """docstring for Car"""
-    def __init__(self, x, y, theta, speed=3*90, max_steer=15/(1/60), size=10):
+    def __init__(self, x, y, theta, speed=2*90, max_steer=15/(1/60), size=10):
         super(Car, self).__init__()
         self.x = x
         self.y = y

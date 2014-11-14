@@ -6,6 +6,7 @@ import numpy as np
 from scipy import interpolate
 import math
 from Utils import Utils 
+from time import time
 
 class Lane(object):
     """docstring for ClassName"""
@@ -24,6 +25,7 @@ class Lane(object):
         self.highlight = None
         self.selected = None
         self.events = events
+        self.last_support_point_move = time()
         self.register_events()
 
     def add_support_point(self, x,y,before=-1):
@@ -135,19 +137,36 @@ class Lane(object):
         self.events.register_callback("mousebuttonup", self.on_mousebuttonup)
 
     def on_mousebuttondown(self, event):
-        if event.button == 1:
+        if event.button == 1: # left 
+            # select support point
             for (x,y,k) in zip(self.support_x,self.support_y,range(self.n_support)):
                 if Utils.distance_between((x,y),event.pos) < self.highlight_radius:
                     self.selected = k
 
 
     def on_mousemotion(self, event):
+        # highlight
+        self.highlight = None
+        for (x,y,k) in zip(self.support_x,self.support_y,range(self.n_support)):
+            if Utils.distance_between((x,y),event.pos) < self.highlight_radius:
+                self.highlight = k
+
+        # move support point
         if self.selected is not None:
-            self.interval = 5
-            self.move_support_point(self.selected, *event.pos)
+            if time() - self.last_support_point_move > 1/60:
+                self.last_support_point_move = time()
+                self.interval = 5
+                self.move_support_point(self.selected, *event.pos)
     
     def on_mousebuttonup(self, event):
+        # deselect
         if self.selected is not None:
             self.selected = None
             self.interval = 1
             self.update()
+
+        if event.button == 3: # right
+            # add new support point
+            first,_ = self.closest_segment(*event.pos)
+            closest = self.closest_sampled_idx(*event.pos) 
+            self.add_support_point(self.sampled_x[closest],self.sampled_y[closest],first)

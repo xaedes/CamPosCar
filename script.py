@@ -54,7 +54,6 @@ class App(object):
         self.lane.add_support_point(200,200)
         self.lane.add_support_point(100,200)
 
-
         self.car = Car(x=150,y=100,theta=45)
         self.action = None
         self.human = HumanController()
@@ -63,11 +62,10 @@ class App(object):
         self.controller = self.onestep
 
 
-        self.window = Window(self.screen, self.events, 300, 200, "caption")
-
-        self.last_support_point_insert_time = time() 
+        # self.window = Window(self.screen, self.events, 300, 200, "caption")
 
         self.grid = Grid(50,50,*self.size)
+        self.last_distance_grid_update = time() - 10
         self.update_distance_grid()
 
         self.done = False
@@ -148,7 +146,7 @@ class App(object):
                 # print action_line
                 pygame.draw.lines(self.screen,color,False,action_line,width)
 
-        self.window.draw()
+        # self.window.draw()
 
 
     def input(self):
@@ -156,19 +154,6 @@ class App(object):
         cursor = pygame.mouse.get_pos()
         (left_button, middle_button, right_button) = pygame.mouse.get_pressed() 
         
-        # # select support points
-        # if left_button == 1 and self.lane.selected is None:
-        #     # for k in range(self.lane.n_support):
-        #     for (x,y,k) in zip(self.lane.support_x,self.lane.support_y,range(self.lane.n_support)):
-        #         if Utils.distance_between((x,y),cursor) < self.lane.highlight_radius:
-        #         # if inRect(self.lane.support_point_rect(k),cursor[0],cursor[1]):
-        #             self.lane.selected = k
-
-        # # move support points
-        # if left_button == 1 and  self.lane.selected is not None:
-        #     self.lane.interval = 5
-        #     self.lane.move_support_point(self.lane.selected, cursor[0], cursor[1])
-        #     self.update_distance_grid()
 
         keys = pygame.key.get_pressed()
         if self.lane.selected is not None:
@@ -177,32 +162,7 @@ class App(object):
                 self.lane.selected = None
                 self.update_distance_grid()
 
-
-        # # deselect support points
-        # if left_button == 0:
-        #     self.lane.selected = None
-
-        #     if self.lane.interval > 1:
-        #         self.lane.interval = 1
-        #         self.lane.update()
-
-        self.lane.highlight = None
-        for (x,y,k) in zip(self.lane.support_x,self.lane.support_y,range(self.lane.n_support)):
-            if Utils.distance_between((x,y),cursor) < self.lane.highlight_radius:
-                self.lane.highlight = k
-                
-
-
-        # add new support point
-        if right_button==1:
-            if time() - self.last_support_point_insert_time > 1:
-                first,_ = self.lane.closest_segment(cursor[0],cursor[1])
-                closest = self.lane.closest_sampled_idx(cursor[0],cursor[1]) 
-                self.lane.add_support_point(self.lane.sampled_x[closest],self.lane.sampled_y[closest],first)
-                self.last_support_point_insert_time = time() 
-                self.update_distance_grid()
-
-
+ 
         if keys[pygame.K_SPACE]:
             # save original speed
             if not hasattr(self.car,"speed_on"):
@@ -214,15 +174,23 @@ class App(object):
             self.controller = self.human if self.controller != self.human else self.onestep
 
     def update_distance_grid(self):
-        for i in range(self.grid.width):
-            for j in range(self.grid.height):
-                x,y = self.grid.xs[i], self.grid.ys[j]
+        # return
+        if time() - self.last_distance_grid_update > 1 / 5:
+            print time() - self.last_distance_grid_update
+            self.last_distance_grid_update = time()        
+            for i in range(self.grid.width):
+                for j in range(self.grid.height):
+                    x,y = self.grid.xs[i], self.grid.ys[j]
 
-                closest_idx = self.lane.closest_sampled_idx(x, y)
-                diff = np.array([self.lane.sampled_x[closest_idx]-x,self.lane.sampled_y[closest_idx]-y])
-                distance = math.sqrt(np.sum(np.square(diff)))
+                    closest_idx = self.lane.closest_sampled_idx(x, y)
+                    distance = Utils.distance_between(
+                        (self.lane.sampled_x[closest_idx],self.lane.sampled_y[closest_idx]),
+                        (x,y))
+                    # diff = np.array([self.lane.sampled_x[closest_idx]-x,self.lane.sampled_y[closest_idx]-y])
+                    # distance = math.sqrt(np.sum(np.square(diff)))
 
-                self.grid.data[i,j] = distance*distance
+                    self.grid.data[i,j] = distance*distance
+            
     
     def register_events(self):
         self.events.register_callback("quit", self.on_quit)
@@ -233,7 +201,9 @@ class App(object):
 
     def on_laneupdate(self, lane):
         if lane == self.lane:
-            self.update_distance_grid()
+            if self.lane.selected is None:
+                self.update_distance_grid()
+        # pass
 
     def spin(self):
         # Loop until the user clicks the close button.
