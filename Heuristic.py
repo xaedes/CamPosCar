@@ -18,36 +18,39 @@ class Heuristic(object):
 
     def evaluate(self, node):
         score = 0
-        closest_idx = self.lane.closest_sampled_idx(node.car.x, node.car.y)
+        node.closest_lane_idx = self.lane.closest_sampled_idx(node.car.x, node.car.y)
 
         # initialize odometry
         if self.traveled is None:
-            self.traveled = closest_idx
+            self.traveled = node.closest_lane_idx
+
+
 
         # update odometry
-        # diff = closest_idx - self.traveled
+        if node.prevNode is not None:
+            diff = node.closest_lane_idx - node.prevNode.closest_lane_idx
+            # diff -= np.round(diff / self.lane.path_len) * self.lane.path_len
         # print "diff", np.round(diff / self.lane.path_len)
-        # diff -= np.round(diff / self.lane.path_len) * self.lane.path_len
         # self.traveled += diff
-        # score += self.traveled 
+            score += diff * -100 
         # print self.traveled 
 
 
 
         distance = Utils.distance_between(
-                    (self.lane.sampled_x[closest_idx],self.lane.sampled_y[closest_idx]),
+                    (self.lane.sampled_x[node.closest_lane_idx],self.lane.sampled_y[node.closest_lane_idx]),
                     (node.car.x, node.car.y))
         # print distance
         score -= distance*distance * 10
 
         # tangents = self.lane.sample_tangents()
         # print tangents 
-        # print car.theta , tangents[closest_idx]
-        # diff = car.theta - tangents[closest_idx]
+        # print car.theta , tangents[node.closest_lane_idx]
+        # diff = car.theta - tangents[node.closest_lane_idx]
         # diff -= np.round(diff / 360) * 360
         # print diff
         # score -= (diff*diff)
-        # print tangents[closest_idx] 
+        # print tangents[node.closest_lane_idx] 
 
         # pri
 
