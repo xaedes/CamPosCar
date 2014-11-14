@@ -31,15 +31,17 @@ class Utils(object):
 
     @classmethod
     def tangents(CLS,xs,ys):
+        if len(xs) == 0:
+            return np.array([])
         left_shifted_xs  = np.hstack([xs[-1],xs[:-1]]) 
-        left_shifted_y  = np.hstack([ys[-1],ys[:-1]]) 
-        right_shifted_x = np.hstack([xs[1:],xs[-1]])
-        right_shifted_y = np.hstack([ys[1:],ys[-1]])
-        dx = left_shifted_x - right_shifted_x
-        dy = left_shifted_y - right_shifted_y
+        left_shifted_ys  = np.hstack([ys[-1],ys[:-1]]) 
+        right_shifted_xs = np.hstack([xs[1:],xs[0]])
+        right_shifted_ys = np.hstack([ys[1:],ys[0]])
+        dx = left_shifted_xs - right_shifted_xs
+        dy = left_shifted_ys - right_shifted_ys
         tangents = np.arctan2(dy,dx)/d2r
-        # diffs = np.hstack([0,np.diff(tangents)])
-        # diffs -= np.round(diffs/360)*360
-        # tangents = tangents[0] + diffs.cumsum()
+        diffs = np.hstack([0,np.diff(tangents)])
+        diffs -= np.round(diffs/180)*180
+        tangents = tangents[0] + diffs.cumsum()
         return tangents
         
