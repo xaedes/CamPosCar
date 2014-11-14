@@ -99,14 +99,17 @@ class NStepLookaheadControll(Controller):
             q = node.heuristic_value
             if best_q is None:
                 best_q = q
-            if q == best_q:
                 best_actions.append(node.action)
-            if q > best_q:
+            elif abs(q - best_q) < 1e-7: # float approx equal
+                best_actions.append(node.action)
+            elif q > best_q:
                 best_q = q
                 best_actions = [node.action]
 
             # print q, a
             # qs.append(q)
         # print np.array(qs).std()
-
-        return best_actions[np.random.randint(len(best_actions))]
+        if len(best_actions) == 0:
+            return 0
+        else:
+            return best_actions[np.random.randint(len(best_actions))]
