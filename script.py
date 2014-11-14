@@ -176,7 +176,6 @@ class App(object):
     def update_distance_grid(self):
         # return
         if time() - self.last_distance_grid_update > 1 / 5:
-            print time() - self.last_distance_grid_update
             self.last_distance_grid_update = time()        
             for i in range(self.grid.width):
                 for j in range(self.grid.height):
