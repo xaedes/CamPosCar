@@ -7,6 +7,8 @@ import pygame
 
 import scipy.interpolate
 
+from Utils import Utils
+
 class Draw(object):
     """docstring for Draw"""
     BLACK     = (   0,   0,   0)
@@ -36,3 +38,20 @@ class Draw(object):
             color = (color2 - color1)*i/(n-1)+color1
             # print  points[i], points[i+1]
             pygame.draw.line(screen, color, points[:,i], points[:,i+1], width)
+
+    @classmethod
+    def draw_rotated_rect(CLS,screen,x,y,w,h,angle,color=BLACK):
+        xs=[-w/2,
+           w/2,
+           w/2,
+           -w/2]
+
+        ys=[-h/2,
+           -h/2,
+           h/2,
+           h/2]
+
+        rotated = Utils.rotate_points(zip(xs,ys), angle)
+        translated = Utils.translate_points(rotated,x,y)
+
+        pygame.draw.polygon(screen, color, translated, 1)

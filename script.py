@@ -54,7 +54,9 @@ class App(object):
         self.lane.add_support_point(200,200)
         self.lane.add_support_point(100,200)
 
-        self.car = Car(x=150,y=100,theta=45)
+        self.cars = []
+        self.cars.append(Car(x=150,y=100,theta=45))
+        self.cars.append(Car(x=250,y=100,theta=-45))
         self.action = None
         self.human = HumanController()
         self.heuristic = Heuristic(self.lane)
@@ -87,34 +89,8 @@ class App(object):
     def draw_string(self,string,x,y,color=Draw.BLACK):
         Draw.draw_string(self.screen,self.font,string,x,y,color)
 
-    def rotate_points(self,points,angle,at=(0,0)):
-        ax, ay = at
-        d2r=math.pi/180
-        cs,sn=math.cos(angle*d2r),math.sin(angle*d2r)
-        return [(ax+(i-ax) * cs - (j-ay) * sn,ay+(i-ax) * sn + (j-ay) * cs) for (i,j) in points]
-    
-    def translate_points(self,points,x,y):
-        return [(i+x,j+y) for (i,j) in points]
-
-    def draw_rotated_rect(self,x,y,w,h,angle,color=Draw.BLACK):
-        xs=[-w/2,
-           w/2,
-           w/2,
-           -w/2]
-
-        ys=[-h/2,
-           -h/2,
-           h/2,
-           h/2]
-
-        rotated = self.rotate_points(zip(xs,ys), angle)
-        translated = self.translate_points(rotated,x,y)
-
-        pygame.draw.polygon(self.screen, color, translated, 1)
-
 
     def draw(self):
-
         self.grid.draw(self.screen)
 
         # Draw the interpolated line
@@ -134,19 +110,11 @@ class App(object):
             # self.draw_string(k, self.lane.support_x[k],self.lane.support_y[k])
 
         # Draw car
-        self.draw_rotated_rect(self.car.x,self.car.y,self.car.size,self.car.size*0.8,self.car.theta,Draw.WHITE)
-        if self.controller is not None and self.controller.action is not None:
-            action_lines={}
-            m = self.car.size * 1.10
-            l = self.car.size * 0.5
-            for a in self.car.actions:
-                action_line = self.translate_points(self.rotate_points([(0,0),(m,-a*l)],self.car.theta),self.car.x,self.car.y)
-                color = Draw.DARKBLUE if self.controller.action == a else Draw.WHITE
-                width = 2 if self.controller.action == a else 1
-                # print action_line
-                pygame.draw.lines(self.screen,color,False,action_line,width)
-
-        # self.window.draw()
+        for car in self.cars:
+            if self.controller is not None and hasattr(self.controller,"action"):
+                car.draw(self.screen, self.controller.action)
+            else:
+                car.draw(self.screen)
 
 
     def input(self):
@@ -230,10 +198,11 @@ class App(object):
 
             # --- Game logic should go here
             if self.controller is not None:
-                self.controller.update(self.car)
+                for car in self.cars:
+                    action = self.controller.compute_action(car)
+                    self.controller.action = action
+                    car.forward(action,dt)
 
-                if self.controller.action is not None:
-                    self.car.forward(self.controller.action,dt)
 
             # --- Drawing code should go here
          

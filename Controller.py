@@ -10,23 +10,24 @@ class Controller(object):
     """docstring for Controller"""
     def __init__(self):
         super(Controller, self).__init__()
-        self.action = None
 
-    def update(self,car):
-        pass
+    def compute_action(self,car):
+        return 0
 
 class HumanController(Controller):
     """docstring for HumanController"""
     def __init__(self):
         super(HumanController, self).__init__()
     
-    def update(self,car):
+    def compute_action(self,car):
         keys = pygame.key.get_pressed()
-        self.action = 0
+        action = 0
         if keys[pygame.K_LEFT]:
-            self.action += 1
+            action += 1
         if keys[pygame.K_RIGHT]:
-            self.action -= 1
+            action -= 1
+
+        return action
 
 class OneStepLookaheadController(Controller):
     """docstring for OneStepLookaheadController"""
@@ -36,7 +37,7 @@ class OneStepLookaheadController(Controller):
         self.heuristic = heuristic
         self.timestep = 0.1 # in s
 
-    def update(self,car):
+    def compute_action(self,car):
         origin = Node(car)
         best_q = None
         best_actions = list()
@@ -56,4 +57,4 @@ class OneStepLookaheadController(Controller):
             qs.append(q)
         # print np.array(qs).std()
 
-        self.action = best_actions[np.random.randint(len(best_actions))]
+        return best_actions[np.random.randint(len(best_actions))]
