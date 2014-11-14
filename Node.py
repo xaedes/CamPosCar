@@ -11,8 +11,18 @@ class Node(object):
         self.action = action
         self.prevNode = prevNode
         self.children = []
+        if self.prevNode is not None:
+            self.action_history = copy(self.prevNode.action_history)
+            self.heuristic_history = copy(self.prevNode.heuristic_history)
+        else:
+            self.action_history = []
+            self.heuristic_history = []
+        if action is not None:
+            self.action_history.append(action)
+
         self.heuristic_value = Node.heuristic.evaluate(self)
         self.best_heuristic_value_from_here = self.heuristic_value
+        self.heuristic_history.append(self.heuristic_value)
 
         if self.prevNode is not None:
             self.depth = self.prevNode.depth + 1
