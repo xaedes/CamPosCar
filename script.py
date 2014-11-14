@@ -55,11 +55,12 @@ class App(object):
         self.lane.add_support_point(100,200)
 
         self.cars = []
-        self.cars.append(Car(x=150,y=100,theta=45,speed=90))
-        self.cars.append(Car(x=250,y=100,theta=-45,speed=2*90))
+        for k in range(10):
+            self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
+        # self.cars.append(Car(x=250,y=100,theta=-45,speed=2*90))
         self.action = None
         self.human = HumanController()
-        self.heuristic = Heuristic(self.lane)
+        self.heuristic = Heuristic(self.lane, self.cars)
         self.onestep = OneStepLookaheadController(self.lane,self.heuristic)
         self.controller = self.onestep
 
