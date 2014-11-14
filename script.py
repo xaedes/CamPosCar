@@ -71,6 +71,8 @@ class App(object):
         self.grid = Grid(50,50,*self.size)
         self.update_distance_grid()
 
+        self.done = False
+
         self.spin()
 
     def setup_pygame(self):
@@ -225,25 +227,32 @@ class App(object):
 
                 self.grid.data[i,j] = distance*distance
         
+    def on_quit(self, args):
+        self.done = True
 
     def spin(self):
         # Loop until the user clicks the close button.
-        done = False
+        self.done = False
          
         # Used to manage how fast the screen updates
         clock = pygame.time.Clock()
 
         self.last_time = time()
 
+        self.events.register_callback("quit", self.on_quit)
+
         # -------- Main Program Loop -----------
-        while not done:
+        while not self.done:
             dt = time()-self.last_time
             self.last_time = time()
             # --- Main event loop
+
             for event in pygame.event.get(): # User did something
-                print event.type
-                if event.type == pygame.QUIT: # If user clicked close
-                    done = True # Flag that we are done so we exit this loop
+                if event.type in self.events.pygame_mappings:
+                    self.events.fire_callbacks(self.events.pygame_mappings[event.type], event)
+
+                # if event.type == pygame.QUIT: # If user clicked close
+                    # done = True # Flag that we are done so we exit this loop
             self.input()
 
             # --- Game logic should go here
