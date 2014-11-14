@@ -5,13 +5,15 @@ from __future__ import \
 import numpy as np  # Numpy, das Number One Number Crunching Tool
 import math
 
+from Utils import Utils
 
 class Heuristic(object):
     """docstring for Heuristic"""
 
-    def __init__(self, lane):
+    def __init__(self, lane, cars):
         super(Heuristic, self).__init__()
         self.lane = lane
+        self.cars = cars
         self.traveled = None
 
     def evaluate(self, node):
@@ -30,8 +32,17 @@ class Heuristic(object):
         # score += self.traveled 
         # print self.traveled 
 
-        diff = np.array([self.lane.sampled_x[closest_idx]-node.car.x,self.lane.sampled_y[closest_idx]-node.car.y])
-        distance = math.sqrt(np.sum(np.square(diff)))
+        for othercar in self.cars:
+            if othercar.id != node.car.id:
+                dist = Utils.distance_between(
+                            (othercar.x, othercar.y),
+                            (node.car.x, node.car.y))
+                if dist < 1.5 * (node.car.size + othercar.size):
+                    score -= 1e10
+
+        distance = Utils.distance_between(
+                    (self.lane.sampled_x[closest_idx],self.lane.sampled_y[closest_idx]),
+                    (node.car.x, node.car.y))
         # print distance
         score -= distance*distance * 10
 
