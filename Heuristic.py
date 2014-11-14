@@ -32,13 +32,7 @@ class Heuristic(object):
         # score += self.traveled 
         # print self.traveled 
 
-        for othercar in self.cars:
-            if othercar.id != node.car.id:
-                dist = Utils.distance_between(
-                            (othercar.x, othercar.y),
-                            (node.car.x, node.car.y))
-                if dist < 1.5 * (node.car.size + othercar.size):
-                    score -= 1e10
+
 
         distance = Utils.distance_between(
                     (self.lane.sampled_x[closest_idx],self.lane.sampled_y[closest_idx]),
@@ -56,5 +50,13 @@ class Heuristic(object):
         # print tangents[closest_idx] 
 
         # pri
+
+        for othercar in self.cars:
+            if othercar.id != node.car.id:
+                dist = Utils.distance_between(
+                            (othercar.x, othercar.y),
+                            (node.car.x, node.car.y))
+                if dist < 1.5 * (node.car.size + othercar.size):
+                    score = -1e10
 
         return score

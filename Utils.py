@@ -22,7 +22,6 @@ class Utils(object):
     def rotate_points(CLS,points,angle,at=(0,0)):
         ax, ay = at
         d2r=math.pi/180
-        print angle
         cs,sn=math.cos(angle*d2r),math.sin(angle*d2r)
         return [(ax+(i-ax) * cs - (j-ay) * sn,ay+(i-ax) * sn + (j-ay) * cs) for (i,j) in points]
     

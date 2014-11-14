@@ -20,7 +20,7 @@ class Car(object):
         self.theta = theta # in degree
         self.size = size
         self.speed = speed # px / s
-        self.actions = np.linspace(-1,1,7)
+        self.actions = np.linspace(-1,1,3)
         self.max_steer = max_steer # in degree/s
         global car_id
         self.id = car_id
@@ -53,7 +53,7 @@ class Car(object):
         l = self.size * 0.5
         for a in self.actions:
             action_line = Utils.translate_points(Utils.rotate_points([(0,0),(m,-a*l)],self.theta),self.x,self.y)
-            color = Draw.DARKBLUE if action == a else Draw.WHITE
+            color = Draw.WHITE
             width = 2 if action == a else 1
             pygame.draw.lines(screen,color,False,action_line,width)
 

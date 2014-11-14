@@ -6,6 +6,8 @@ from copy import copy
 import numpy as np
 from Node import Node
 
+from time import time
+
 class Controller(object):
     """docstring for Controller"""
     def __init__(self):
@@ -55,6 +57,56 @@ class OneStepLookaheadController(Controller):
 
             # print q, a
             qs.append(q)
+        # print np.array(qs).std()
+
+        return best_actions[np.random.randint(len(best_actions))]
+
+class NStepLookaheadControll(Controller):
+    def __init__(self, lane, heuristic, n = 4):
+        super(NStepLookaheadControll, self).__init__()
+        self.lane = lane
+        self.heuristic = heuristic
+        self.timestep = 4/60 # in s
+        self.n = n
+
+    def compute_action(self,car):
+        origin = Node(car)
+
+        stack = [origin]
+
+        start = time()
+
+        i = 0
+        while len(stack) > 0:
+            current = stack.pop()
+            i += 1
+            if current.heuristic <= -1e10:
+                continue
+                
+            if time() - start < 1/(60*4):
+                children = current.advance_all(self.timestep)
+                children = sorted(children, key = lambda node:node.heuristic_value)
+                for child in children:
+                    stack.append(child)
+
+        print i
+        stack = []
+
+        best_q = None
+        best_actions = list()
+        # qs = list()
+        for node in origin.children:
+            q = node.heuristic_value
+            if best_q is None:
+                best_q = q
+            if q == best_q:
+                best_actions.append(node.action)
+            if q > best_q:
+                best_q = q
+                best_actions = [node.action]
+
+            # print q, a
+            # qs.append(q)
         # print np.array(qs).std()
 
         return best_actions[np.random.randint(len(best_actions))]
