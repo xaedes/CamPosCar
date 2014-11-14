@@ -30,13 +30,11 @@ from Grid import Grid
 from Draw import Draw
 from Window import Window
 from Events import Events
+from Utils import Utils
 
 import math
 from copy import copy
 # Define some colors
-def inRect(rect, i, j):
-    x,y,w,h = rect
-    return i >= x and i <= x + w - 1 and  j >= y and j <= y + h - 1
 
 d2r = math.pi / 180
 

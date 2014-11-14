@@ -21,6 +21,7 @@ class Draw(object):
     def draw_string(CLS, screen,font,string,x,y,color=BLACK):
         rendered = font.render(str(string), True,color)
         screen.blit(rendered,(x,y)) 
+        return rendered.get_size()
 
     @classmethod
     def draw_gradient_line(CLS, screen,point1,point2,color1,color2,interval=1,width=1):
