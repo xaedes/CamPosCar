@@ -60,7 +60,7 @@ class App(object):
         self.human = HumanController()
         self.heuristic = Heuristic(self.lane)
         self.onestep = OneStepLookaheadController(self.lane,self.heuristic)
-        self.controller = self.human
+        self.controller = self.onestep
 
         self.events = Events()
 
