@@ -5,10 +5,11 @@ from __future__ import division    # Standardmäßig float division - Ganzzahldi
 import numpy as np    
 from scipy import interpolate
 import math
+from Utils import Utils 
 
 class Lane(object):
     """docstring for ClassName"""
-    def __init__(self, interval=1,size=6):
+    def __init__(self, events, interval=1,size=6):
         super(Lane, self).__init__()
         self.n_support = 0
         self.n_sampled = 0
@@ -22,6 +23,8 @@ class Lane(object):
         self.highlight_radius = self.size * math.sqrt(2) * 1
         self.highlight = None
         self.selected = None
+        self.events = events
+        self.register_events()
 
     def add_support_point(self, x,y,before=-1):
         self.support_x = self.support_x[:before+1] + [x] + self.support_x[before+1:]
@@ -54,6 +57,7 @@ class Lane(object):
     
         self.n_sampled = len(self.sampled_x)
         self.closest_supports = self.closest_support_idxs(self.sampled_x, self.sampled_y)
+        self.events.fire_callbacks("laneupdate", self)
 
     def sample_line(self, interval = None):
         if interval is None:
@@ -123,3 +127,27 @@ class Lane(object):
         # diffs -= np.round(diffs/360)*360
         # tangents = tangents[0] + diffs.cumsum()
         return tangents
+
+    def register_events(self):
+        self.events.init_callback_key("laneupdate")
+        self.events.register_callback("mousebuttondown", self.on_mousebuttondown)
+        self.events.register_callback("mousemotion", self.on_mousemotion)
+        self.events.register_callback("mousebuttonup", self.on_mousebuttonup)
+
+    def on_mousebuttondown(self, event):
+        if event.button == 1:
+            for (x,y,k) in zip(self.support_x,self.support_y,range(self.n_support)):
+                if Utils.distance_between((x,y),event.pos) < self.highlight_radius:
+                    self.selected = k
+
+
+    def on_mousemotion(self, event):
+        if self.selected is not None:
+            self.interval = 5
+            self.move_support_point(self.selected, *event.pos)
+    
+    def on_mousebuttonup(self, event):
+        if self.selected is not None:
+            self.selected = None
+            self.interval = 1
+            self.update()

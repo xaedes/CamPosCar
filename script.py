@@ -46,7 +46,9 @@ class App(object):
         
         self.setup_pygame()
 
-        self.lane = Lane()
+        self.events = Events()
+
+        self.lane = Lane(self.events)
         self.lane.add_support_point(100,100)
         self.lane.add_support_point(200,100)
         self.lane.add_support_point(200,200)
@@ -60,7 +62,6 @@ class App(object):
         self.onestep = OneStepLookaheadController(self.lane,self.heuristic)
         self.controller = self.onestep
 
-        self.events = Events()
 
         self.window = Window(self.screen, self.events, 300, 200, "caption")
 
@@ -71,6 +72,7 @@ class App(object):
 
         self.done = False
 
+        self.register_events()
         self.spin()
 
     def setup_pygame(self):
@@ -148,28 +150,25 @@ class App(object):
 
         self.window.draw()
 
-    
-    def distance_between(self, a, b):
-        return math.sqrt(np.sum(np.square(np.array(a)-np.array(b))))
 
     def input(self):
         # get mouse info
         cursor = pygame.mouse.get_pos()
         (left_button, middle_button, right_button) = pygame.mouse.get_pressed() 
         
-        # select support points
-        if left_button == 1 and self.lane.selected is None:
-            # for k in range(self.lane.n_support):
-            for (x,y,k) in zip(self.lane.support_x,self.lane.support_y,range(self.lane.n_support)):
-                if self.distance_between((x,y),cursor) < self.lane.highlight_radius:
-                # if inRect(self.lane.support_point_rect(k),cursor[0],cursor[1]):
-                    self.lane.selected = k
+        # # select support points
+        # if left_button == 1 and self.lane.selected is None:
+        #     # for k in range(self.lane.n_support):
+        #     for (x,y,k) in zip(self.lane.support_x,self.lane.support_y,range(self.lane.n_support)):
+        #         if Utils.distance_between((x,y),cursor) < self.lane.highlight_radius:
+        #         # if inRect(self.lane.support_point_rect(k),cursor[0],cursor[1]):
+        #             self.lane.selected = k
 
-        # move support points
-        if left_button == 1 and  self.lane.selected is not None:
-            self.lane.interval = 5
-            self.lane.move_support_point(self.lane.selected, cursor[0], cursor[1])
-            self.update_distance_grid()
+        # # move support points
+        # if left_button == 1 and  self.lane.selected is not None:
+        #     self.lane.interval = 5
+        #     self.lane.move_support_point(self.lane.selected, cursor[0], cursor[1])
+        #     self.update_distance_grid()
 
         keys = pygame.key.get_pressed()
         if self.lane.selected is not None:
@@ -179,17 +178,17 @@ class App(object):
                 self.update_distance_grid()
 
 
-        # deselect support points
-        if left_button == 0:
-            self.lane.selected = None
+        # # deselect support points
+        # if left_button == 0:
+        #     self.lane.selected = None
 
-            if self.lane.interval > 1:
-                self.lane.interval = 1
-                self.lane.update()
+        #     if self.lane.interval > 1:
+        #         self.lane.interval = 1
+        #         self.lane.update()
 
         self.lane.highlight = None
         for (x,y,k) in zip(self.lane.support_x,self.lane.support_y,range(self.lane.n_support)):
-            if self.distance_between((x,y),cursor) < self.lane.highlight_radius:
+            if Utils.distance_between((x,y),cursor) < self.lane.highlight_radius:
                 self.lane.highlight = k
                 
 
@@ -224,9 +223,17 @@ class App(object):
                 distance = math.sqrt(np.sum(np.square(diff)))
 
                 self.grid.data[i,j] = distance*distance
-        
+    
+    def register_events(self):
+        self.events.register_callback("quit", self.on_quit)
+        self.events.register_callback("laneupdate", self.on_laneupdate)
+
     def on_quit(self, args):
         self.done = True
+
+    def on_laneupdate(self, lane):
+        if lane == self.lane:
+            self.update_distance_grid()
 
     def spin(self):
         # Loop until the user clicks the close button.
@@ -237,7 +244,6 @@ class App(object):
 
         self.last_time = time()
 
-        self.events.register_callback("quit", self.on_quit)
 
         # -------- Main Program Loop -----------
         while not self.done:
