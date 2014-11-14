@@ -29,4 +29,17 @@ class Utils(object):
     def translate_points(CLS,points,x,y):
         return [(i+x,j+y) for (i,j) in points]
 
+    @classmethod
+    def tangents(CLS,xs,ys):
+        left_shifted_xs  = np.hstack([xs[-1],xs[:-1]]) 
+        left_shifted_y  = np.hstack([ys[-1],ys[:-1]]) 
+        right_shifted_x = np.hstack([xs[1:],xs[-1]])
+        right_shifted_y = np.hstack([ys[1:],ys[-1]])
+        dx = left_shifted_x - right_shifted_x
+        dy = left_shifted_y - right_shifted_y
+        tangents = np.arctan2(dy,dx)/d2r
+        # diffs = np.hstack([0,np.diff(tangents)])
+        # diffs -= np.round(diffs/360)*360
+        # tangents = tangents[0] + diffs.cumsum()
+        return tangents
         

@@ -121,17 +121,7 @@ class Lane(object):
         return first,second
 
     def sample_tangents(self):
-        left_shifted_x  = np.hstack([self.sampled_x[-1],self.sampled_x[:-1]]) 
-        right_shifted_x = np.hstack([self.sampled_x[1:],self.sampled_x[-1]])
-        dx = left_shifted_x - right_shifted_x
-        left_shifted_y  = np.hstack([self.sampled_y[-1],self.sampled_y[:-1]]) 
-        right_shifted_y = np.hstack([self.sampled_y[1:],self.sampled_y[-1]])
-        dy = left_shifted_y - right_shifted_y
-        tangents = np.arctan2(dy,dx)*180/math.pi
-        # diffs = np.hstack([0,np.diff(tangents)])
-        # diffs -= np.round(diffs/360)*360
-        # tangents = tangents[0] + diffs.cumsum()
-        return tangents
+        return Utils.tangents(self.sampled_x,self.sampled_x)
 
     def register_events(self):
         self.events.init_callback_key("laneupdate")
