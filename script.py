@@ -96,21 +96,7 @@ class App(object):
     def draw(self):
         self.grid.draw(self.screen)
 
-        # Draw the interpolated line
-        points = zip(self.lane.sampled_x, self.lane.sampled_y)
-        if len(points) > 1:
-            pygame.draw.aalines(self.screen, Draw.WHITE, False, points, 2)
-
-        # Draw support points
-        for k in range(self.lane.n_support):
-            if self.lane.highlight == k:
-                pygame.draw.circle(self.screen, Draw.HIGHLIGHT, (int(self.lane.support_x[k]),int(self.lane.support_y[k])), int(self.lane.highlight_radius), 0)
-            if self.lane.selected == k:
-                pygame.draw.rect(self.screen, Draw.WHITE, self.lane.support_point_rect(k), 2)
-            else:
-                pygame.draw.rect(self.screen, Draw.WHITE, self.lane.support_point_rect(k), 1)
-
-            # self.draw_string(k, self.lane.support_x[k],self.lane.support_y[k])
+        self.lane.draw(self.screen)
 
         # Draw car
         for car in self.cars:

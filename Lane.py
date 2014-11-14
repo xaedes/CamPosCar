@@ -8,6 +8,9 @@ import math
 from Utils import Utils 
 from time import time
 
+import pygame
+from Draw import Draw
+
 class Lane(object):
     """docstring for ClassName"""
     def __init__(self, events, interval=1,size=6):
@@ -170,3 +173,19 @@ class Lane(object):
             first,_ = self.closest_segment(*event.pos)
             closest = self.closest_sampled_idx(*event.pos) 
             self.add_support_point(self.sampled_x[closest],self.sampled_y[closest],first)
+    
+    def draw(self, screen):
+        # Draw the interpolated line
+        points = zip(self.sampled_x, self.sampled_y)
+        if len(points) > 1:
+            pygame.draw.aalines(screen, Draw.WHITE, False, points, 2)
+
+        # Draw support points
+        for k in range(self.n_support):
+            if self.highlight == k:
+                pygame.draw.circle(screen, Draw.HIGHLIGHT, (int(self.support_x[k]),int(self.support_y[k])), int(self.highlight_radius), 0)
+            if self.selected == k:
+                pygame.draw.rect(screen, Draw.WHITE, self.support_point_rect(k), 2)
+            else:
+                pygame.draw.rect(screen, Draw.WHITE, self.support_point_rect(k), 1)
+            # self.draw_string(k, self.support_x[k],self.support_y[k])
