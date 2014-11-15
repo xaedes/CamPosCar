@@ -35,6 +35,7 @@ class Heuristic(object):
             score += diff * -100 
         # print self.traveled 
 
+        score -= 50 * np.array(node.action_history).std()
 
 
         distance = Utils.distance_between(
