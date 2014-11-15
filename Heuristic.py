@@ -60,7 +60,7 @@ class Heuristic(object):
                 dist = Utils.distance_between(
                             (othercar.x, othercar.y),
                             (node.car.x, node.car.y))
-                if dist < 1.5 * (node.car.size + othercar.size):
+                if dist < (node.car.collision_radius() + othercar.collision_radius()):
                     score = -1e10
 
         # f = 0.0

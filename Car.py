@@ -20,11 +20,14 @@ class Car(object):
         self.theta = theta # in degree
         self.size = size
         self.speed = speed # px / s
-        self.actions = np.linspace(-1,1,3)
+        self.actions = np.linspace(-1,1,19)
         self.max_steer = max_steer # in degree/s
         global car_id
         self.id = car_id
         car_id += 1
+
+    def collision_radius(self):
+        return self.size * 1.2
 
     def steers(self):
         return self.actions * self.max_steer
@@ -47,7 +50,13 @@ class Car(object):
         return self
 
     def draw(self,screen, action = None):
+        # draw collision area
+        pygame.draw.circle(screen, Draw.WHITE, (int(self.x+0.5), int(self.y+0.5)), int(self.collision_radius()+0.5), 1)
+
+        # draw car itself
         Draw.draw_rotated_rect(screen,self.x,self.y,self.size,self.size*0.8,self.theta,Draw.WHITE)
+
+        # draw action lines
         action_lines={}
         m = self.size * 1.10
         l = self.size * 0.5
