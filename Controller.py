@@ -75,9 +75,9 @@ class OneStepLookaheadController(Controller):
             for child in origin.children:
                 pygame.draw.line(screen, Draw.WHITE, (origin.car.x, origin.car.y), (child.car.x,child.car.y), 1)
 
-class NStepLookaheadControll(Controller):
+class NStepLookaheadController(Controller):
     def __init__(self, lane, heuristic, n = 4):
-        super(NStepLookaheadControll, self).__init__()
+        super(NStepLookaheadController, self).__init__()
         self.lane = lane
         self.heuristic = heuristic
         self.timestep = 4/60 # in s
