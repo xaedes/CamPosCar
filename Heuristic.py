@@ -29,7 +29,7 @@ class Heuristic(object):
         # update odometry
         if node.prevNode is not None:
             diff = node.closest_lane_idx - node.prevNode.closest_lane_idx
-            # diff -= np.round(diff / self.lane.path_len) * self.lane.path_len
+            diff -= np.round(diff / self.lane.path_len) * self.lane.path_len
         # print "diff", np.round(diff / self.lane.path_len)
         # self.traveled += diff
             score += diff * -100 
