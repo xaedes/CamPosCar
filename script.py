@@ -63,8 +63,8 @@ class App(object):
         self.heuristic = Heuristic(self.lane, self.cars)
         Node.heuristic = self.heuristic
         self.onestep = OneStepLookaheadController(self.lane,self.heuristic)
-        self.nstep4 = NStepLookaheadControll(self.lane, self.heuristic, 2)
-        self.controller = self.nstep4
+        self.nstep = NStepLookaheadControll(self.lane, self.heuristic, 2)
+        self.controller = self.nstep
 
 
         # self.window = Window(self.screen, self.events, 300, 200, "caption")
