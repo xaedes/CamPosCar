@@ -20,7 +20,7 @@ class OneStepLookaheadController(NodeController):
     def compute_action_from_node(self, origin):
         best_q = None
         best_actions = list()
-        for a in car.actions:
+        for a in origin.car.actions:
             node = origin.advance(a,self.timestep)
             q = self.heuristic.evaluate(node)
             if best_q is None:

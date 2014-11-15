@@ -4,6 +4,8 @@ from __future__ import division    # Standardmäßig float division - Ganzzahldi
 
 from Controller import Controller
 
+import pygame
+
 class HumanController(Controller):
     """docstring for HumanController"""
     def __init__(self):
@@ -19,5 +21,5 @@ class HumanController(Controller):
 
         return action
 
-    def draw(self, car):
+    def draw(self, screen, car):
         pass

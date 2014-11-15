@@ -10,7 +10,7 @@ class Controller(object):
     def compute_action(self,car):
         return 0
 
-    def draw(self, car):
+    def draw(self, screen, car):
         pass
 
 
