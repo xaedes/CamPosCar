@@ -5,12 +5,13 @@ from copy import copy
 class Node(object):
     heuristic = None
     """docstring for Node"""
-    def __init__(self, car, action=None, prevNode = None):
+    def __init__(self, car, action=None, prevNode = None,other_cars=None):
         super(Node, self).__init__()
         self.car = car
         self.action = action
         self.prevNode = prevNode
         self.children = []
+        self.other_cars = other_cars if other_cars is not None else []
         if self.prevNode is not None:
             self.action_history = copy(self.prevNode.action_history)
             self.heuristic_history = copy(self.prevNode.heuristic_history)
@@ -44,7 +45,8 @@ class Node(object):
         return Node(
                 car = copy(self.car).forward(action,timestep), 
                 action = action, 
-                prevNode = self)
+                prevNode = self,
+                other_cars = [copy(car).forward(0,timestep) for car in self.other_cars])
 
     def advance_all(self, timestep):
         return [self.advance(action, timestep) for action in self.car.actions]

@@ -8,15 +8,19 @@ from Node import Node
 
 class NodeController(Controller):
     """docstring for OneStepLookaheadController"""
-    def __init__(self):
+    def __init__(self, all_cars):
         super(NodeController, self).__init__()
         self.origins = dict()
+        self.all_cars = all_cars
 
     def compute_action_from_node(self, origin):
         return 0
 
+    def compute_other_cars(self, car):
+        return [other for other in self.all_cars if other.id != car.id]
+
     def compute_action(self,car):
-        origin = Node(car)
+        origin = Node(car,other_cars=self.compute_other_cars(car))
         self.origins[car.id] = origin
         action = self.compute_action_from_node(origin)
         return action

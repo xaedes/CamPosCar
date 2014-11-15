@@ -11,8 +11,8 @@ import numpy as np
 
 class OneStepLookaheadController(NodeController):
     """docstring for OneStepLookaheadController"""
-    def __init__(self, lane, heuristic):
-        super(OneStepLookaheadController, self).__init__()
+    def __init__(self, all_cars,lane, heuristic):
+        super(OneStepLookaheadController, self).__init__(all_cars)
         self.lane = lane
         self.heuristic = heuristic
         self.timestep = 0.1 # in s

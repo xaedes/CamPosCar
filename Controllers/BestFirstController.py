@@ -12,8 +12,8 @@ from time import time
 from Queue import PriorityQueue
 
 class BestFirstController(NodeController):
-    def __init__(self, lane, heuristic):
-        super(BestFirstController, self).__init__()
+    def __init__(self, all_cars,lane, heuristic):
+        super(BestFirstController, self).__init__(all_cars)
         self.lane = lane
         self.heuristic = heuristic
         self.timestep = 4/60 # in s

@@ -10,8 +10,8 @@ import numpy as np
 from time import time
 
 class NStepLookaheadController(NodeController):
-    def __init__(self, lane, heuristic, n = 4):
-        super(NStepLookaheadController, self).__init__()
+    def __init__(self, all_cars,lane, heuristic, n = 4):
+        super(NStepLookaheadController, self).__init__(all_cars)
         self.lane = lane
         self.heuristic = heuristic
         self.timestep = 4/60 # in s

@@ -10,10 +10,9 @@ from Utils import Utils
 class Heuristic(object):
     """docstring for Heuristic"""
 
-    def __init__(self, lane, cars):
+    def __init__(self, lane):
         super(Heuristic, self).__init__()
         self.lane = lane
-        self.cars = cars
         self.traveled = None
 
     def evaluate(self, node):
@@ -55,13 +54,12 @@ class Heuristic(object):
 
         # pri
 
-        for othercar in self.cars:
-            if othercar.id != node.car.id:
-                dist = Utils.distance_between(
-                            (othercar.x, othercar.y),
-                            (node.car.x, node.car.y))
-                if dist < (node.car.collision_radius() + othercar.collision_radius()):
-                    score = -1e10
+        for other_car in node.other_cars:
+            dist = Utils.distance_between(
+                        (other_car.x, other_car.y),
+                        (node.car.x, node.car.y))
+            if dist < (node.car.collision_radius() + other_car.collision_radius()):
+                score = -1e10 + dist*dist
 
         # f = 0.0
         # score = f * np.array(node.heuristic_history).mean() + (1-f) * score

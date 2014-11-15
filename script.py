@@ -60,11 +60,11 @@ class App(object):
         # self.cars.append(Car(x=250,y=100,theta=-45,speed=2*90))
         self.action = None
         self.human = HumanController()
-        self.heuristic = Heuristic(self.lane, self.cars)
+        self.heuristic = Heuristic(self.lane)
         Node.heuristic = self.heuristic
-        self.onestep = OneStepLookaheadController(self.lane,self.heuristic)
-        self.nstep = NStepLookaheadController(self.lane, self.heuristic, 2)
-        self.bestfirst = BestFirstController(self.lane, self.heuristic)
+        self.onestep = OneStepLookaheadController(self.cars,self.lane,self.heuristic)
+        self.nstep = NStepLookaheadController(self.cars,self.lane, self.heuristic, 2)
+        self.bestfirst = BestFirstController(self.cars,self.lane, self.heuristic)
         self.controller = self.bestfirst
 
 
