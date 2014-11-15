@@ -4,5 +4,6 @@
 from Controller import *
 from HumanController import *
 from NodeController import *
-from NStepLookaheadController import *
 from OneStepLookaheadController import *
+from NStepLookaheadController import *
+from BestFirstController import *
