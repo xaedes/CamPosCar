@@ -121,11 +121,12 @@ class App(object):
 
  
         if keys[pygame.K_SPACE]:
-            # save original speed
-            if not hasattr(self.car,"speed_on"):
-                self.car.speed_on = self.car.speed
-            # toggle speed
-            self.car.speed = self.car.speed_on - self.car.speed
+            for car in self.cars:
+                # save original speed
+                if not hasattr(car,"speed_on"):
+                    car.speed_on = car.speed
+                # toggle speed
+                car.speed = car.speed_on - car.speed
         
         if keys[pygame.K_RETURN]:
             self.controller = self.human if self.controller != self.human else self.onestep
