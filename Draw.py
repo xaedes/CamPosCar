@@ -18,6 +18,7 @@ class Draw(object):
     DARKBLUE  = (   0,   0, 128)
     LIGHTGRAY = ( 222, 222, 222)
     HIGHLIGHT = ( 247, 255, 216)
+    YELLOW    = ( 255, 255,   0)
     
     @classmethod
     def draw_string(CLS, screen,font,string,x,y,color=BLACK):
