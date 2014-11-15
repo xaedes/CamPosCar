@@ -63,4 +63,7 @@ class Heuristic(object):
                 if dist < 1.5 * (node.car.size + othercar.size):
                     score = -1e10
 
+        # f = 0.0
+        # score = f * np.array(node.heuristic_history).mean() + (1-f) * score
+
         return score
