@@ -23,7 +23,7 @@ import pygame
 from time import time
 
 from Lane import Lane
-from Controller import *
+from Controllers import *
 from Heuristic import Heuristic
 from Car import Car
 from Grid import Grid
