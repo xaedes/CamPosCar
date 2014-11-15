@@ -25,7 +25,7 @@ class NStepLookaheadController(NodeController):
         while len(stack) > 0:
             current = stack.pop()
             n_traversed += 1
-            if current.heuristic <= -1e10:
+            if current.heuristic_value <= -1e10:
                 continue
                 
             if time() - start < 1/(60*4):
