@@ -100,8 +100,11 @@ class App(object):
 
         # Draw car
         for car in self.cars:
-            if self.controller is not None and hasattr(self.controller,"action"):
-                car.draw(self.screen, self.controller.action)
+            if self.controller is not None:
+                if hasattr(self.controller,"action"):
+                    car.draw(self.screen, self.controller.action)
+                self.controller.draw(self.screen, car)
+
             else:
                 car.draw(self.screen)
 
