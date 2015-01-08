@@ -50,9 +50,14 @@ class Lane(object):
         self.update()
 
     def save(self, fn):
-        pass
+        s = (self.support_x,self.support_y)
+        pickle.dump(s, open(fn, "wb"))
     def load(self, fn):
-        pass
+        sx,sy = pickle.load(open(fn,"rb"))
+        self.support_x = sx
+        self.support_y = sy
+        self.n_support = len(self.support_x)
+        self.update()
 
     def update(self):
         try:
@@ -134,6 +139,16 @@ class Lane(object):
         self.events.register_callback("mousebuttondown", self.on_mousebuttondown)
         self.events.register_callback("mousemotion", self.on_mousemotion)
         self.events.register_callback("mousebuttonup", self.on_mousebuttonup)
+        self.events.register_callback("keyup", self.on_keyup)
+
+    def on_keyup(self, event):
+        ctrl = pygame.KMOD_LCTRL | pygame.KMOD_RCTRL | pygame.KMOD_CTRL
+        # ctrl+s
+        if (event.mod & ctrl != 0) and (event.key == pygame.K_s):
+            self.save("saved.sv")
+        # ctrl+o
+        if (event.mod & ctrl != 0) and (event.key == pygame.K_o):
+            self.load("saved.sv")
 
     def on_mousebuttondown(self, event):
         if event.button == 1: # left 
