@@ -24,6 +24,7 @@ class Car(object):
         self.max_steer = max_steer # in degree/s
         global car_id
         self.id = car_id
+        self.controller = None
         car_id += 1
 
     def collision_radius(self):

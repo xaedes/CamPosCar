@@ -63,8 +63,10 @@ class App(object):
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
         self.cars.append(Car(x=250,y=100,theta=-45,speed=4*90))
+        self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90))
         self.action = None
         self.human = HumanController()
+        self.cars[-1].controller = self.human
         self.heuristic = Heuristic(self.lane)
         Node.heuristic = self.heuristic
         self.onestep = OneStepLookaheadController(self.cars,self.lane,self.heuristic)
@@ -200,8 +202,10 @@ class App(object):
             # --- Game logic should go here
             if self.controller is not None:
                 for car in self.cars:
-                    action = self.controller.compute_action(car)
-                    self.controller.action = action
+                    if car.controller is None:
+                        car.controller = self.controller
+                    action = car.controller.compute_action(car)
+                    car.controller.action = action
                     car.forward(action,dt)
 
 
