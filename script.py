@@ -53,10 +53,11 @@ class App(object):
 
 
         self.lane = Lane(self.events)
-        self.lane.add_support_point(100,100)
-        self.lane.add_support_point(200,100)
-        self.lane.add_support_point(200,200)
-        self.lane.add_support_point(100,200)
+        self.lane.load("parkour.sv")
+        # self.lane.add_support_point(100,100)
+        # self.lane.add_support_point(200,100)
+        # self.lane.add_support_point(200,200)
+        # self.lane.add_support_point(100,200)
 
         self.cars = []
         for k in range(4):
