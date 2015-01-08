@@ -13,10 +13,12 @@ class Draw(object):
     """docstring for Draw"""
     BLACK     = (   0,   0,   0)
     WHITE     = ( 255, 255, 255)
+    BLUE      = (   0,   0, 255)
     GREEN     = (   0, 255,   0)
     RED       = ( 255,   0,   0)
     DARKBLUE  = (   0,   0, 128)
     LIGHTGRAY = ( 222, 222, 222)
+    # HIGHLIGHT = (   8,   0,  39)
     HIGHLIGHT = ( 247, 255, 216)
     YELLOW    = ( 255, 255,   0)
     

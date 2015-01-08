@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import division    # Standardmäßig float division - Ganzzahldivision kann man explizit mit '//' durchführen
+import pickle
 import numpy as np    
 from scipy import interpolate
 import math
@@ -47,6 +48,11 @@ class Lane(object):
         self.support_x[index]=x
         self.support_y[index]=y
         self.update()
+
+    def save(self, fn):
+        pass
+    def load(self, fn):
+        pass
 
     def update(self):
         try:
@@ -165,17 +171,19 @@ class Lane(object):
             self.add_support_point(self.sampled_x[closest],self.sampled_y[closest],first)
     
     def draw(self, screen):
+        color = Draw.BLUE
+        color_highlight = Draw.HIGHLIGHT
         # Draw the interpolated line
         points = zip(self.sampled_x, self.sampled_y)
         if len(points) > 1:
-            pygame.draw.aalines(screen, Draw.WHITE, False, points, 2)
+            pygame.draw.aalines(screen, color, False, points, 2)
 
         # Draw support points
         for k in range(self.n_support):
             if self.highlight == k:
-                pygame.draw.circle(screen, Draw.HIGHLIGHT, (int(self.support_x[k]),int(self.support_y[k])), int(self.highlight_radius), 0)
+                pygame.draw.circle(screen, color_highlight, (int(self.support_x[k]),int(self.support_y[k])), int(self.highlight_radius), 0)
             if self.selected == k:
-                pygame.draw.rect(screen, Draw.WHITE, self.support_point_rect(k), 2)
+                pygame.draw.rect(screen, color, self.support_point_rect(k), 2)
             else:
-                pygame.draw.rect(screen, Draw.WHITE, self.support_point_rect(k), 1)
+                pygame.draw.rect(screen, color, self.support_point_rect(k), 1)
             # self.draw_string(k, self.support_x[k],self.support_y[k])

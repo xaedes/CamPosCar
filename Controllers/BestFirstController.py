@@ -57,7 +57,8 @@ class BestFirstController(NodeController):
             return best_actions[np.random.randint(len(best_actions))]
 
     def draw_node(self, screen, node):
+        color = Draw.BLACK
         if node.prevNode is not None:
             current_pos = (node.car.x, node.car.y)
             parent_pos = (node.prevNode.car.x,node.prevNode.car.y)
-            pygame.draw.line(screen, Draw.YELLOW, current_pos, parent_pos, 1)
+            pygame.draw.line(screen, color, current_pos, parent_pos, 1)

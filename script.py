@@ -22,6 +22,7 @@ import pygame
 
 from time import time
 
+from Background import Background
 from Lane import Lane
 from Controllers import *
 from Heuristic import Heuristic
@@ -44,9 +45,12 @@ class App(object):
     def __init__(self):
         super(App, self).__init__()
         
+        self.background = Background(filename="background.png")
+
         self.setup_pygame()
 
         self.events = Events()
+
 
         self.lane = Lane(self.events)
         self.lane.add_support_point(100,100)
@@ -83,7 +87,7 @@ class App(object):
         pygame.init()
          
         # Set the width and height of the screen [width, height]
-        self.size = (700, 500)
+        self.size = (self.background.rect.width, self.background.rect.height)
         self.screen = pygame.display.set_mode(self.size)
 
         self.font = pygame.font.SysFont("arial",10)
@@ -95,7 +99,9 @@ class App(object):
 
 
     def draw(self):
-        self.grid.draw(self.screen)
+        self.background.draw(self.screen)
+
+        # self.grid.draw(self.screen)
 
         self.lane.draw(self.screen)
 

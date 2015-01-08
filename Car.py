@@ -50,11 +50,12 @@ class Car(object):
         return self
 
     def draw(self,screen, action = None):
+        color = Draw.BLACK
         # draw collision area
-        pygame.draw.circle(screen, Draw.WHITE, (int(self.x+0.5), int(self.y+0.5)), int(self.collision_radius()+0.5), 1)
+        pygame.draw.circle(screen, color, (int(self.x+0.5), int(self.y+0.5)), int(self.collision_radius()+0.5), 1)
 
         # draw car itself
-        Draw.draw_rotated_rect(screen,self.x,self.y,self.size,self.size*0.8,self.theta,Draw.WHITE)
+        Draw.draw_rotated_rect(screen,self.x,self.y,self.size,self.size*0.8,self.theta,color)
 
         # draw action lines
         action_lines={}
@@ -62,7 +63,7 @@ class Car(object):
         l = self.size * 0.5
         for a in self.actions:
             action_line = Utils.translate_points(Utils.rotate_points([(0,0),(m,-a*l)],self.theta),self.x,self.y)
-            color = Draw.WHITE
+            color = color
             width = 2 if action == a else 1
             pygame.draw.lines(screen,color,False,action_line,width)
 
