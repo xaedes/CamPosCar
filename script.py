@@ -32,6 +32,7 @@ from Draw import Draw
 from Window import Window
 from Events import Events
 from Utils import Utils
+from CamView import CamView
 
 import math
 from copy import copy
@@ -46,6 +47,9 @@ class App(object):
         super(App, self).__init__()
         
         self.background = Background(filename="background.png")
+
+        # a=pygame.surfarray.array3d(self.background.img)
+        # print a.shape
 
         self.setup_pygame()
 
@@ -62,10 +66,14 @@ class App(object):
         self.cars = []
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
-        self.cars.append(Car(x=250,y=100,theta=-45,speed=4*90))
+        self.cars.append(Car(x=250,y=100,theta=-45,speed=0.5*90))
         self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90))
         self.action = None
         self.human = HumanController()
+
+        self.camview = CamView(self.cars[0],pygame.surfarray.array3d(self.background.img))
+        self.camview.register_events(self.events)
+
         self.cars[-1].controller = self.human
         self.heuristic = Heuristic(self.lane)
         Node.heuristic = self.heuristic
@@ -107,6 +115,8 @@ class App(object):
         # self.grid.draw(self.screen)
 
         self.lane.draw(self.screen)
+
+        self.camview.draw(self.screen)
 
         # Draw car
         for car in self.cars:
