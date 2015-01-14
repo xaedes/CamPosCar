@@ -45,17 +45,18 @@ class Draw(object):
     @classmethod
     def draw_rotated_rect(CLS,screen,x,y,w,h,angle,color=BLACK):
         # angle in degree
-        xs=[-w/2,
-           w/2,
-           w/2,
-           -w/2]
+        # xs=[-w/2,
+        #    w/2,
+        #    w/2,
+        #    -w/2]
 
-        ys=[-h/2,
-           -h/2,
-           h/2,
-           h/2]
+        # ys=[-h/2,
+        #    -h/2,
+        #    h/2,
+        #    h/2]
 
-        rotated = Utils.rotate_points(zip(xs,ys), angle)
-        translated = Utils.translate_points(rotated,x,y)
+        # rotated = Utils.rotate_points(zip(xs,ys), angle)
+        # translated = Utils.translate_points(rotated,x,y)
 
-        pygame.draw.polygon(screen, color, translated, 1)
+        pygame.draw.polygon(screen, color, Utils.rotated_rect_points((x,y),angle,w,h), 1)
+

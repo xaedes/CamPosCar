@@ -39,13 +39,16 @@ class CamView(object):
         # theta = 22.5
         theta = self.car.theta
         # cv2.imshow("foo?",self.img)
-        view = self.subimage(self.img, pos, 0*90+theta , self.width, self.height)
+        view = self.subimage(self.img, pos, theta , self.width, self.height)
         cv2.imshow("",view)
         cv2.waitKey(1)
         # surf = pygame.surfarray.make_surface(view)
 
         # screen.blit(surf,(0,0))
         Draw.draw_rotated_rect(screen,pos[0],pos[1],self.width,self.height,theta,Draw.RED)
+            
+        print Utils.rotated_rect_points(pos,theta,self.width,self.height)
+        # pygame.draw.polygon(screen, Draw.RED, Utils.rotated_rect_points(pos,theta,self.width,self.height), 1)
         # pass
 
     def register_events(self,events):
@@ -97,3 +100,4 @@ class CamView(object):
         # croppes = warped[round(center-width/2)]
 
         return cropped
+

@@ -20,6 +20,7 @@ class Utils(object):
 
     @classmethod
     def rotate_points(CLS,points,angle,at=(0,0)):
+        # angle in degree
         ax, ay = at
         d2r=math.pi/180
         cs,sn=math.cos(angle*d2r),math.sin(angle*d2r)
@@ -45,3 +46,20 @@ class Utils(object):
         tangents = tangents[0] + diffs.cumsum()
         return tangents
         
+    @classmethod
+    def rotated_rect_points(CLS,center,angle,width,height):
+        # angle in degree
+        xs=[-width/2,
+           width/2,
+           width/2,
+           -width/2]
+
+        ys=[-height/2,
+           -height/2,
+           height/2,
+           height/2]
+
+        rotated = Utils.rotate_points(zip(xs,ys), angle)
+        translated = Utils.translate_points(rotated,*center)
+
+        return translated
