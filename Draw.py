@@ -44,6 +44,7 @@ class Draw(object):
 
     @classmethod
     def draw_rotated_rect(CLS,screen,x,y,w,h,angle,color=BLACK):
+        # angle in degree
         xs=[-w/2,
            w/2,
            w/2,
