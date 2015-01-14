@@ -26,6 +26,7 @@ class Car(object):
         self.id = car_id
         self.controller = None
         car_id += 1
+        self.pause = False
 
     def collision_radius(self):
         return self.size * 1.2

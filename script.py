@@ -150,6 +150,8 @@ class App(object):
                     car.speed_on = car.speed
                 # toggle speed
                 car.speed = car.speed_on - car.speed
+
+                car.pause = True
         
         if keys[pygame.K_RETURN]:
             self.controller = self.human if self.controller != self.human else self.onestep
@@ -212,11 +214,12 @@ class App(object):
             # --- Game logic should go here
             if self.controller is not None:
                 for car in self.cars:
-                    if car.controller is None:
-                        car.controller = self.controller
-                    action = car.controller.compute_action(car)
-                    car.controller.action = action
-                    car.forward(action,dt)
+                    if not car.pause:
+                        if car.controller is None:
+                            car.controller = self.controller
+                        action = car.controller.compute_action(car)
+                        car.controller.action = action
+                        car.forward(action,dt)
 
 
             # --- Drawing code should go here
