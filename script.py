@@ -128,22 +128,8 @@ class App(object):
             else:
                 car.draw(self.screen)
 
-
-    def input(self):
-        # get mouse info
-        cursor = pygame.mouse.get_pos()
-        (left_button, middle_button, right_button) = pygame.mouse.get_pressed() 
-        
-
-        keys = pygame.key.get_pressed()
-        if self.lane.selected is not None:
-            if keys[pygame.K_DELETE]:
-                self.lane.remove_support_point(self.lane.selected)
-                self.lane.selected = None
-                self.update_distance_grid()
-
- 
-        if keys[pygame.K_SPACE]:
+    def on_keyup(self, event):
+        if event.key == pygame.K_SPACE:
             for car in self.cars:
                 # save original speed
                 if not hasattr(car,"speed_on"):
@@ -151,10 +137,44 @@ class App(object):
                 # toggle speed
                 car.speed = car.speed_on - car.speed
 
-                car.pause = True
-        
-        if keys[pygame.K_RETURN]:
+                car.pause = not car.pause
+
+        elif self.lane.selected is not None \
+           and event.key == pygame.K_DELETE:
+            for car in self.cars:
+                self.lane.remove_support_point(self.lane.selected)
+                self.lane.selected = None
+                self.update_distance_grid()
+
+        elif event.key == pygame.K_RETURN:
             self.controller = self.human if self.controller != self.human else self.onestep
+
+    def input(self):
+        # get mouse info
+        cursor = pygame.mouse.get_pos()
+        (left_button, middle_button, right_button) = pygame.mouse.get_pressed() 
+        
+
+        # keys = pygame.key.get_pressed()
+        # if self.lane.selected is not None:
+        #     if keys[pygame.K_DELETE]:
+        #         self.lane.remove_support_point(self.lane.selected)
+        #         self.lane.selected = None
+        #         self.update_distance_grid()
+
+ 
+        # if keys[pygame.K_SPACE]:
+        #     for car in self.cars:
+        #         # save original speed
+        #         if not hasattr(car,"speed_on"):
+        #             car.speed_on = car.speed
+        #         # toggle speed
+        #         car.speed = car.speed_on - car.speed
+
+        #         car.pause = True
+        
+        # if keys[pygame.K_RETURN]:
+        #     self.controller = self.human if self.controller != self.human else self.onestep
 
     def update_distance_grid(self):
         # return
@@ -177,6 +197,7 @@ class App(object):
     def register_events(self):
         self.events.register_callback("quit", self.on_quit)
         self.events.register_callback("laneupdate", self.on_laneupdate)
+        self.events.register_callback("keyup", self.on_keyup)
 
     def on_quit(self, args):
         self.done = True

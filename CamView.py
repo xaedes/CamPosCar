@@ -69,60 +69,66 @@ class CamView(object):
             self.xy = event.pos
             
 
-    # def subimage(self,image, centre, theta, width, height):
-    #     # http://stackoverflow.com/a/11627903/798588
-    #     # output_image = cv.CreateImage((width, height), image.depth, image.nChannels)
-    #     mapping = np.array([[np.cos(theta), -np.sin(theta), -centre[0]],
-    #                        [np.sin(theta), np.cos(theta), -centre[1]]])
-    #     print mapping
-    #     # map_matrix_cv = cv.fromarray(mapping)
-    #     # cv.GetQuadrangleSubPix(image, output_image, map_matrix_cv)
-    #     return cv2.warpAffine(image,mapping,(width, height),borderMode=cv2.BORDER_REPLICATE)
-    #     # return output_image    
+    def subimage(self,image, centre, theta, width, height):
+        # http://stackoverflow.com/a/11627903/798588
+        # output_image = cv.CreateImage((width, height), image.depth, image.nChannels)
+        theta *= 3.14159 / 180 
+        # theta += 3.14159
+        mapping = np.array([[np.cos(theta), -np.sin(theta),centre[0] + 1*(width/2)],
+                            [np.sin(theta), np.cos(theta), centre[1] + 1*(height/2)]])
+        print mapping
+        print centre
+        # map_matrix_cv = cv.fromarray(mapping)
+        # cv.GetQuadrangleSubPix(image, output_image, map_matrix_cv)
+        return cv2.warpAffine(image,mapping,(width, height),flags=cv2.WARP_INVERSE_MAP,borderMode=cv2.BORDER_REPLICATE)
+        # return output_image    
 
-    # theta in degree
-    def subimage(self,image, center, theta, width, height):
+    # # theta in degree
+    # def subimage(self,image, center, theta, width, height):
 
-        #http://answers.opencv.org/question/497/extract-a-rotatedrect-area/
-        # thanks to http://felix.abecassis.me/2011/10/opencv-rotation-deskewing/
-        if theta < -45.:
-            theta += 90.0
-            height, width = width, height
+    #     #http://answers.opencv.org/question/497/extract-a-rotatedrect-area/
+    #     # thanks to http://felix.abecassis.me/2011/10/opencv-rotation-deskewing/
+    #     if theta < -45.:
+    #         theta += 90.0
+    #         height, width = width, height
         
 
-        # add white border to image
-        padded = np.ones(shape=(image.shape[0]+1,image.shape[1]+1,3),dtype=image.dtype) * 255
-        padded[1:padded.shape[0],1:padded.shape[1],:] = image[:,:,:]
+    #     # add white border to image
+    #     padded = np.ones(shape=(image.shape[0]+1,image.shape[1]+1,3),dtype=image.dtype) * 255
+    #     padded[1:padded.shape[0],1:padded.shape[1],:] = image[:,:,:]
 
-        # crop to bounding bounding box of rotated rect
-        rrPoints = np.array([Utils.rotated_rect_points(center,theta,width,height)],dtype="int32")
-        boundingRect = cv2.boundingRect(rrPoints)
-        x,y,w,h = boundingRect
-        croppedCenter = (x+w/2+1,y+h/2+1)
-        cropped = cv2.getRectSubPix(padded, (w, h), croppedCenter)
+    #     # crop to bounding bounding box of rotated rect
+    #     rrPoints = np.array([Utils.rotated_rect_points(center,theta,width,height)],dtype="int32")
+    #     boundingRect = cv2.boundingRect(rrPoints)
+    #     x,y,w,h = boundingRect
+    #     croppedCenter = (x+w/2+1,y+h/2+1)
+    #     cropped = cv2.getRectSubPix(padded, (w, h), croppedCenter)
 
-        cv2.imshow("cropped",cropped)
+    #     cv2.imshow("cropped",cropped)
 
-        # get the rotation matrix
-        M = cv2.getRotationMatrix2D((w/2,h/2), theta , 1.0) 
+    #     # get the rotation matrix
+    #     M = cv2.getRotationMatrix2D((w/2,h/2), theta , 1.0) 
 
-        print ""
+    #     # todo problem: M mappt den rotationspunkt auf sich selbst, 
+    #     # aber im späteren bild müsste er etwas verschoben sein, damit das ganze bild reinpasst
 
-        croppedPoints = np.array([[0,0],[w,0],[0,h],[w,h]],dtype="float32")
-        croppedPointsM = (croppedPoints - M[:,2]/2).dot(M[:,:2])+M[:,2]/2
-        croppedPointsMBBox = cv2.boundingRect(np.array([croppedPointsM],dtype="float32"))
-        dsize=croppedPointsMBBox[2:]
-        # print croppedPointsM
+    #     print ""
 
-        # M[:,2] += croppedPointsMBBox[:2]
+    #     croppedPoints = np.array([[0,0],[w,0],[0,h],[w,h]],dtype="float32")
+    #     croppedPointsM = (croppedPoints - M[:,2]/2).dot(M[:,:2])+M[:,2]/2
+    #     croppedPointsMBBox = cv2.boundingRect(np.array([croppedPointsM],dtype="float32"))
+    #     dsize=croppedPointsMBBox[2:]
+    #     # print croppedPointsM
 
-        # perform the affine transformation
-        warped = cv2.warpAffine(cropped,M,dsize,borderMode=cv2.BORDER_TRANSPARENT ,flags=cv2.INTER_NEAREST)
+    #     # M[:,2] += croppedPointsMBBox[:2]
 
-        return warped
-        # crop the resulting image
-        cropped = cv2.getRectSubPix(warped, (width, height), center)
-        # croppes = warped[round(center-width/2)]
+    #     # perform the affine transformation
+    #     warped = cv2.warpAffine(cropped,M,dsize,borderMode=cv2.BORDER_TRANSPARENT ,flags=cv2.INTER_NEAREST)
 
-        return cropped
+    #     return warped
+    #     # crop the resulting image
+    #     cropped = cv2.getRectSubPix(warped, (width, height), center)
+    #     # croppes = warped[round(center-width/2)]
+
+    #     return cropped
 
