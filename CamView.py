@@ -47,7 +47,7 @@ class CamView(object):
         # screen.blit(surf,(0,0))
         Draw.draw_rotated_rect(screen,pos[0],pos[1],self.width,self.height,theta,Draw.RED)
             
-        print Utils.rotated_rect_points(pos,theta,self.width,self.height)
+        # print Utils.rotated_rect_points(pos,theta,self.width,self.height)
         # pygame.draw.polygon(screen, Draw.RED, Utils.rotated_rect_points(pos,theta,self.width,self.height), 1)
         # pass
 
@@ -89,12 +89,37 @@ class CamView(object):
             theta += 90.0
             height, width = width, height
         
-        # get the rotation matrix
-        M = cv2.getRotationMatrix2D(center, theta , 1.0) 
-        # perform the affine transformation
-        warped = cv2.warpAffine(image,M,image.shape[:2],borderMode=cv2.BORDER_REPLICATE,flags=cv2.INTER_NEAREST)
 
-        # return warped
+        # add white border to image
+        padded = np.ones(shape=(image.shape[0]+1,image.shape[1]+1,3),dtype=image.dtype) * 255
+        padded[1:padded.shape[0],1:padded.shape[1],:] = image[:,:,:]
+
+        # crop to bounding bounding box of rotated rect
+        rrPoints = np.array([Utils.rotated_rect_points(center,theta,width,height)],dtype="int32")
+        boundingRect = cv2.boundingRect(rrPoints)
+        x,y,w,h = boundingRect
+        croppedCenter = (x+w/2+1,y+h/2+1)
+        cropped = cv2.getRectSubPix(padded, (w, h), croppedCenter)
+
+        cv2.imshow("cropped",cropped)
+
+        # get the rotation matrix
+        M = cv2.getRotationMatrix2D((w/2,h/2), theta , 1.0) 
+
+        print ""
+
+        croppedPoints = np.array([[0,0],[w,0],[0,h],[w,h]],dtype="float32")
+        croppedPointsM = (croppedPoints - M[:,2]/2).dot(M[:,:2])+M[:,2]/2
+        croppedPointsMBBox = cv2.boundingRect(np.array([croppedPointsM],dtype="float32"))
+        dsize=croppedPointsMBBox[2:]
+        # print croppedPointsM
+
+        # M[:,2] += croppedPointsMBBox[:2]
+
+        # perform the affine transformation
+        warped = cv2.warpAffine(cropped,M,dsize,borderMode=cv2.BORDER_TRANSPARENT ,flags=cv2.INTER_NEAREST)
+
+        return warped
         # crop the resulting image
         cropped = cv2.getRectSubPix(warped, (width, height), center)
         # croppes = warped[round(center-width/2)]

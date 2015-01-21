@@ -20,7 +20,7 @@ class Car(object):
         self.theta = theta # in degree
         self.size = size
         self.speed = speed # px / s
-        self.actions = np.linspace(-1,1,3)
+        self.actions = np.linspace(-1,1,31)
         self.max_steer = max_steer # in degree/s
         global car_id
         self.id = car_id
