@@ -17,7 +17,7 @@ from math import cos, sin
 
 class CamView(object):
     """docstring for ClassName"""
-    def __init__(self, car, imageArr,width = 150,height = 150, offset=(0,75), angle_offset = -22):
+    def __init__(self, car, imageArr,width = 150,height = 150, offset=(0,75), angle_offset = -25):
         super(CamView, self).__init__()
         self.car = car
         self.img = imageArr.transpose(1, 0, 2) # flip x and y axes
