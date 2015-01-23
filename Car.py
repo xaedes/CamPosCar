@@ -5,7 +5,8 @@ import numpy as np                 # Numpy, das Number One Number Crunching Tool
 import math
 from Draw import Draw
 from Utils import Utils
-d2r = math.pi / 180
+
+
 
 import pygame
 
@@ -20,7 +21,7 @@ class Car(object):
         self.theta = theta # in degree
         self.size = size
         self.speed = speed # px / s
-        self.actions = np.linspace(-1,1,31)
+        self.actions = np.linspace(-1,1,7)
         self.max_steer = max_steer # in degree/s
         global car_id
         self.id = car_id
@@ -44,8 +45,8 @@ class Car(object):
             # print 1/dt
         steer = action * self.max_steer
         self.theta -= steer * dt 
-        vx = math.cos(self.theta*d2r) * self.speed * dt
-        vy = math.sin(self.theta*d2r) * self.speed * dt
+        vx = math.cos(self.theta*Utils.d2r) * self.speed * dt
+        vy = math.sin(self.theta*Utils.d2r) * self.speed * dt
         self.x += vx
         self.y += vy
 
