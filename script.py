@@ -66,7 +66,7 @@ class App(object):
         self.cars = []
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
-        self.cars.append(Car(x=250,y=100,theta=-45,speed=0.5*90))
+        self.cars.append(Car(x=250,y=100,theta=-45,speed=1.5*90))
         self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90))
         self.action = None
         self.human = HumanController()
