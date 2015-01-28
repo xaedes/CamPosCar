@@ -14,11 +14,12 @@ car_id = 0
 class Car(object):
 
     """docstring for Car"""
-    def __init__(self, x, y, theta, speed=2*90, max_steer=0.2*15/(1/60), size=10):
+    def __init__(self, x, y, theta, speed=2*90, max_steer=0.4*15/(1/60), size=10):
         super(Car, self).__init__()
         self.x = x
         self.y = y
         self.theta = theta # in degree
+        self.gyro = 0  # in degree / s
         self.size = size
         self.speed = speed # px / s
         self.actions = np.linspace(-1,1,7)
@@ -44,9 +45,23 @@ class Car(object):
             # print 1/dt
             # print 1/dt
         steer = action * self.max_steer
-        self.theta -= steer * dt 
-        vx = math.cos(self.theta*Utils.d2r) * self.speed * dt
-        vy = math.sin(self.theta*Utils.d2r) * self.speed * dt
+        self.gyro = -steer
+        last_theta = self.theta
+        self.theta += self.gyro * dt  # in degree
+
+        if self.gyro > 0:
+            # uniform circular movement
+            # see wiki for mathematical background
+            cos_t = math.cos(self.theta*Utils.d2r)
+            sin_t = math.sin(self.theta*Utils.d2r)
+            cos_tl = math.cos(last_theta*Utils.d2r)
+            sin_tl = math.sin(last_theta*Utils.d2r)
+            vx = self.speed * (cos_t+sin_t*self.gyro*dt-cos_tl) / (self.gyro ** 2)
+            vy = self.speed * (sin_t-cos_t*self.gyro*dt-sin_tl) / (self.gyro ** 2)
+        else:
+            vx = math.cos(self.theta*Utils.d2r) * self.speed * dt
+            vy = math.sin(self.theta*Utils.d2r) * self.speed * dt
+
         self.x += vx
         self.y += vy
 
