@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import division    # Standardmäßig float division - Ganzzahldivision kann man explizit mit '//' durchführen
 
-from Controller import Controller
+from ActionController import ActionController
 
 import pygame
 
-class HumanController(Controller):
+class HumanController(ActionController):
     """docstring for HumanController"""
     def __init__(self):
         super(HumanController, self).__init__()

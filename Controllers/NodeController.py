@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import division    # Standardmäßig float division - Ganzzahldivision kann man explizit mit '//' durchführen
 
-from Controller import Controller
+from ActionController import ActionController
 from Node import Node
 
 
-class NodeController(Controller):
+class NodeController(ActionController):
     """docstring for OneStepLookaheadController"""
     def __init__(self, all_cars):
         super(NodeController, self).__init__()
