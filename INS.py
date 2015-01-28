@@ -98,10 +98,12 @@ class INS(object):
 
         # calculate orientation from magnetometer
         mag = np.arctan2(sensor_mag_y,sensor_mag_x)
+        
         # first orientation from magnetometer should be zero
         if self.mag_offset is None:
             self.mag_offset = mag
         mag -= self.mag_offset
+
         # fix orientation 2pi jumps
         mag_diff = mag - self.states['orientation']
         mag_diff -= np.round(mag_diff / (2*math.pi)) * (2*math.pi)
@@ -110,13 +112,6 @@ class INS(object):
 
         # update orientation error
         o_error = self.gyro_integrated.sum - mag
-        # fix 2pi jumps in o_error
-        # disabled as not necessary, but maybe in the future..
-        # if self.o_error_last is None:
-            # self.o_error_last = o_error
-        # o_error_diff = o_error - self.o_error_last
-        # o_error_diff -= np.round(o_error / (2*math.pi)) * (2*math.pi)
-        # o_error = self.o_error_last + o_error_diff
         self.orientation_error.last = o_error
         self.orientation_error.update(np.matrix([o_error]))
         self.orientation_error.predict()
