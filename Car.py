@@ -77,6 +77,19 @@ class Car(object):
         if abs(self.gyro) < 1e-3:
             self.vx = math.cos(self.theta*Utils.d2r) * self.speed * dt
             self.vy = math.sin(self.theta*Utils.d2r) * self.speed * dt
+
+            # calculate global acceleration
+            self.ax = (self.vx - self.last["vx"]) / dt
+            self.ay = (self.vy - self.last["vy"]) / dt
+            g = 0.4
+            self.ax = g * self.ax + (1-g) * self.last["ax"]
+            self.ay = g * self.ay + (1-g) * self.last["ay"]
+
+            # calculate local acceleration
+            self.ax_local, self.ay_local = Utils.rotate_points([(self.ax,self.ay)],-self.theta)[0]
+            self.ax_local = g * self.ax_local + (1-g) * self.last["ax_local"]
+            self.ay_local = g * self.ay_local + (1-g) * self.last["ay_local"]
+
         else:
             # otherwise apply uniform circular motion
 
@@ -108,21 +121,22 @@ class Car(object):
             self.vx = u[0] * a + v[0] * b
             self.vy = u[1] * a + v[1] * b
 
+            # http://dev.physicslab.org/Document.aspx?doctype=3&filename=CircularMotion_CentripetalAcceleration.xml
+            # centripetal acceleration a_c in direction of the circle center (i.e. along u):
+            a_c = 2 * math.pi * r * d_th
+
+            # calculate global acceleration
+            self.ax = a_c * u[0]
+            self.ay = a_c * u[1]
+
+            # calculate local acceleration
+            self.ax_local = 0 
+            self.ay_local = -a_c
 
         self.x += self.vx
         self.y += self.vy
 
-        # calculate global acceleration
-        self.ax = (self.vx - self.last["vx"]) / dt
-        self.ay = (self.vy - self.last["vy"]) / dt
-        g = 0.4
-        self.ax = g * self.ax + (1-g) * self.last["ax"]
-        self.ay = g * self.ay + (1-g) * self.last["ay"]
 
-        # calculate local acceleration
-        self.ax_local, self.ay_local = Utils.rotate_points([(self.ax,self.ay)],-self.theta)[0]
-        self.ax_local = g * self.ax_local + (1-g) * self.last["ax_local"]
-        self.ay_local = g * self.ay_local + (1-g) * self.last["ay_local"]
 
         if self.id == 0:
             print "---"
