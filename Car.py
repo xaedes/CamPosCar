@@ -16,21 +16,26 @@ class Car(object):
     """docstring for Car"""
     def __init__(self, x, y, theta, speed=2*90, max_steer=0.2*15/(1/60), size=10):
         super(Car, self).__init__()
+        self.size = size
         self.x = x
         self.y = y
         self.theta = theta # in degree
         self.gyro = 0  # in degree / s
-        self.size = size
         self.speed = speed # px / s
-        self.actions = np.linspace(-1,1,5)
-        self.max_steer = max_steer # in degree/s
-        self.vx = 0
-        self.vy = 0
+        
+        self.vx, self.vy = 0, 0
+        self.ax, self.ay = 0, 0
+        self.ax_local, self.ay_local = 0, 0
         self.last = {}
+
         global car_id
         self.id = car_id
-        self.controller = None
         car_id += 1
+
+        self.max_steer = max_steer # in degree/s
+        self.actions = np.linspace(-1,1,5)
+
+        self.controller = None
         self.pause = False
 
     def collision_radius(self):
@@ -58,7 +63,11 @@ class Car(object):
             "y": self.y,
             "theta": self.theta,
             "vx": self.vx,
-            "vy": self.vy
+            "vy": self.vy,
+            "ax": self.ax,
+            "ay": self.ay,
+            "ax_local": self.ax_local,
+            "ay_local": self.ay_local
         }
 
         # update orientation
@@ -96,15 +105,33 @@ class Car(object):
             self.vx = u[0] * a + v[0] * b
             self.vy = u[1] * a + v[1] * b
 
+            self.vx = u[0] * a + v[0] * b
+            self.vy = u[1] * a + v[1] * b
+
 
         self.x += self.vx
         self.y += self.vy
 
-        if self.id == 1:
+        # calculate global acceleration
+        self.ax = (self.vx - self.last["vx"]) / dt
+        self.ay = (self.vy - self.last["vy"]) / dt
+        g = 0.1
+        self.ax = g * self.ax + (1-g) * self.last["ax"]
+        self.ay = g * self.ay + (1-g) * self.last["ay"]
 
-            print self.vx
-            print self.vy
-            print self.gyro
+        # calculate local acceleration
+        self.ax_local, self.ay_local = Utils.rotate_points([(self.ax,self.ay)],self.theta)[0]
+        g = 0.1
+        self.ax_local = g * self.ax_local + (1-g) * self.last["ax_local"]
+        self.ay_local = g * self.ay_local + (1-g) * self.last["ay_local"]
+
+        if self.id == 0:
+            print "---"
+            print "self.ax", self.ax
+            print "self.ay", self.ay
+            print "self.ax_local", self.ax_local
+            print "self.ay_local", self.ay_local
+            # print self.gyro
 
         return self
 
