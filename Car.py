@@ -14,7 +14,7 @@ car_id = 0
 class Car(object):
 
     """docstring for Car"""
-    def __init__(self, x, y, theta, speed=2*90, max_steer=0.4*15/(1/60), size=10):
+    def __init__(self, x, y, theta, speed=2*90, max_steer=0.2*15/(1/60), size=10):
         super(Car, self).__init__()
         self.x = x
         self.y = y
@@ -22,7 +22,7 @@ class Car(object):
         self.gyro = 0  # in degree / s
         self.size = size
         self.speed = speed # px / s
-        self.actions = np.linspace(-1,1,7)
+        self.actions = np.linspace(-1,1,5)
         self.max_steer = max_steer # in degree/s
         global car_id
         self.id = car_id
@@ -49,15 +49,21 @@ class Car(object):
         last_theta = self.theta
         self.theta += self.gyro * dt  # in degree
 
-        if self.gyro > 0:
-            # uniform circular movement
-            # see wiki for mathematical background
-            cos_t = math.cos(self.theta*Utils.d2r)
-            sin_t = math.sin(self.theta*Utils.d2r)
-            cos_tl = math.cos(last_theta*Utils.d2r)
-            sin_tl = math.sin(last_theta*Utils.d2r)
-            vx = self.speed * (cos_t+sin_t*self.gyro*dt-cos_tl) / (self.gyro ** 2)
-            vy = self.speed * (sin_t-cos_t*self.gyro*dt-sin_tl) / (self.gyro ** 2)
+        # Something is still bogus in the following uniform circular motion equations...
+        if abs(self.gyro) > 1e-3:
+            # uniform circular motion
+
+            # see whiteboard in wiki
+            d_th = self.theta - last_theta
+            r = self.speed * dt / abs(d_th*Utils.d2r)
+            # v = math.cos(last_theta*Utils.d2r) , math.sin(last_theta*Utils.d2r) # entlang letzter tangente, sollte es eig sein
+            v = math.cos(self.theta*Utils.d2r) , math.sin(self.theta*Utils.d2r) # entlang neuer tangente, funktioniert aber nur damit vernünftig, egal
+            u = v[1],-v[0] # von (x_0,y_0) in richtung mittelpunkt, normale der tangente
+            a = r * (1 - math.cos(abs(d_th)*Utils.d2r)) # projektion x1,y1 auf u
+            c = r * math.sin(abs(d_th)*Utils.d2r) # projektion von x1,y1 auf c
+            vx = u[0] * a + v[0] * c
+            vy = u[1] * a + v[1] * c
+
         else:
             vx = math.cos(self.theta*Utils.d2r) * self.speed * dt
             vy = math.sin(self.theta*Utils.d2r) * self.speed * dt
