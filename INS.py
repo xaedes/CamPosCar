@@ -4,25 +4,10 @@ from __future__ import division    # Standardmäßig float division - Ganzzahldi
 import numpy as np                 # Numpy, das Number One Number Crunching Tool
 import math                        # Mathefunktionen braucht man auch häufiger mal
 
-from ottocar_common import Kalman
-from ottocar_common import DTFilter
-from ottocar_common import Utils
+from Kalman import Kalman
+from Utils import Utils # vorkommen nach aufrufen suchen und an aktuelle Utils methoden anpassen
 
-import os
-import threading
-import rospy
-from std_msgs.msg import Float32, Header
-from ottocar_msgs.msg import StampedFloat32
-from ottocar_msgs.msg import simpleImu as SimpleImu
-from geometry_msgs.msg import Pose2D
-
-from ottocar_state_estimation import ImuCalibration
-
-import pandas as pd
-
-
-d2r=math.pi/180
-r2d=1/d2r
+from ImuCalibration import ImuCalibration
 
 class Integrator(object):
     def __init__(self, dt=1):
@@ -49,11 +34,11 @@ class WienerKalman(Kalman):
 class INS(object):
     # gyro and orientation in rad/s
     sensors = ['accel','odometer','gyro','mag_x', 'mag_y']
-    def __init__(self,dt=0.01):
+    def __init__(self,calib, dt=0.01):
         super(INS, self).__init__()
 
         # self.imuCalibration = ImuCalibration('/home/xaedes/bags/mit_kamera/magcalib/2014-08-20-17-33-13.bag')
-        self.imuCalibration = ImuCalibration()
+        self.imuCalibration = calib
         
         self.states = ['speed', 'orientation', 'yaw_rate', 'pos_x', 'pos_y']
         self.states = dict(map((lambda x: (x,0)),self.states))
@@ -131,7 +116,7 @@ class INS(object):
         self.states['speed'] = self.accel_integrated.sum - self.velocity_error.x[0,0]
 
         # resolution of velocity vector
-        velocity = Utils.rotate_vec((self.states['speed'],0),self.states['orientation']*r2d)
+        velocity = Utils.rotate_points([(self.states['speed'],0)],self.states['orientation']/Utils.d2r)[0]
 
         # integrate velocity vector
         self.vx_integrated.add(velocity[0],dt)
@@ -148,17 +133,19 @@ class INS(object):
         # name can be one of ['speed', 'orientation', 'yaw_rate', 'pos_x', 'pos_y']
         return self.states[name]
 
-def applyINS(Zs,dt=0.01):
-    """Feeds measurement data in Zs into INS and returns pandas DataFrame with states"""
-    ins = INS(dt)
-    n = Zs.shape[0]
-    states = dict()
-    for state in ins.states:
-        states[state] = np.empty(shape=(n))
-    for i in range(n):
-        ins.update(Zs[i,:],dt)
-        for state in ins.states:
-            states[state][i] = ins.states[state]
+# import pandas as pd
+# 
+# def applyINS(Zs,dt=0.01):
+#     """Feeds measurement data in Zs into INS and returns pandas DataFrame with states"""
+#     ins = INS(dt)
+#     n = Zs.shape[0]
+#     states = dict()
+#     for state in ins.states:
+#         states[state] = np.empty(shape=(n))
+#     for i in range(n):
+#         ins.update(Zs[i,:],dt)
+#         for state in ins.states:
+#             states[state][i] = ins.states[state]
 
-    df = pd.DataFrame(states, np.arange(n)*dt)
-    return df
+#     df = pd.DataFrame(states, np.arange(n)*dt)
+#     return df
