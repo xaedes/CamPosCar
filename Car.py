@@ -24,6 +24,9 @@ class Car(object):
         self.speed = speed # px / s
         self.actions = np.linspace(-1,1,5)
         self.max_steer = max_steer # in degree/s
+        self.vx = 0
+        self.vy = 0
+        self.last = {}
         global car_id
         self.id = car_id
         self.controller = None
@@ -44,32 +47,64 @@ class Car(object):
         # if dt > 0:
             # print 1/dt
             # print 1/dt
-        steer = action * self.max_steer
-        self.gyro = -steer
-        last_theta = self.theta
+
+        # calculate gyro from action
+        self.gyro = -action * self.max_steer
+
+
+        # save last state
+        self.last = {
+            "x": self.x,
+            "y": self.y,
+            "theta": self.theta,
+            "vx": self.vx,
+            "vy": self.vy
+        }
+
+        # update orientation
         self.theta += self.gyro * dt  # in degree
 
-        # Something is still bogus in the following uniform circular motion equations...
-        if abs(self.gyro) > 1e-3:
-            # uniform circular motion
-
-            # see whiteboard in wiki
-            d_th = self.theta - last_theta
-            r = self.speed * dt / abs(d_th*Utils.d2r)
-            # v = math.cos(last_theta*Utils.d2r) , math.sin(last_theta*Utils.d2r) # entlang letzter tangente, sollte es eig sein
-            v = math.cos(self.theta*Utils.d2r) , math.sin(self.theta*Utils.d2r) # entlang neuer tangente, funktioniert aber nur damit vernünftig, egal
-            u = v[1],-v[0] # von (x_0,y_0) in richtung mittelpunkt, normale der tangente
-            a = r * (1 - math.cos(abs(d_th)*Utils.d2r)) # projektion x1,y1 auf u
-            c = r * math.sin(abs(d_th)*Utils.d2r) # projektion von x1,y1 auf c
-            self.vx = u[0] * a + v[0] * c
-            self.vy = u[1] * a + v[1] * c
-
-        else:
+        # if gyro is below threshold linear motion is assumed
+        if abs(self.gyro) < 1e-3:
             self.vx = math.cos(self.theta*Utils.d2r) * self.speed * dt
             self.vy = math.sin(self.theta*Utils.d2r) * self.speed * dt
+        else:
+            # otherwise apply uniform circular motion
+
+            # see whiteboard in wiki
+            # notes: whiteboard 'c' is 'b' here
+            
+            # orientation difference
+            d_th = abs(self.theta - self.last["theta"]) * Utils.d2r
+            
+            # radius of circle on which's arc is moved
+            r = self.speed * dt / d_th
+
+            # tangent of movement
+            # according to the whiteboard it should be the last tangent, but it only properly works with the new tangent
+            # v = math.cos(last_theta*Utils.d2r) , math.sin(last_theta*Utils.d2r) # last tangent
+            v = math.cos(self.theta*Utils.d2r) , math.sin(self.theta*Utils.d2r)  # new tangent
+            # points from (x,y) towards the circle center, is normal of tangent v
+            u = v[1],-v[0] 
+
+            # projection of new position (x+vx,y+vy) onto u
+            a = r * (1 - math.cos(d_th)) 
+            # projection of new position (x+vx,y+vy) onto v  ; (b is named 'c' in the whiteboard)
+            b = r * math.sin(d_th) 
+
+            # velocity vector
+            self.vx = u[0] * a + v[0] * b
+            self.vy = u[1] * a + v[1] * b
+
 
         self.x += self.vx
         self.y += self.vy
+
+        if self.id == 1:
+
+            print self.vx
+            print self.vy
+            print self.gyro
 
         return self
 
