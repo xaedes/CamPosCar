@@ -1,12 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 from __future__ import division    # Standardmäßig float division - Ganzzahldivision kann man explizit mit '//' durchführen
-import numpy as np                 # Numpy, das Number One Number Crunching Tool
-import math                        # Mathefunktionen braucht man auch häufiger mal
 
 from Utils import Utils
-
-import os
 
 class ImuCalibration(object):
     """docstring for ImuCalibration"""
