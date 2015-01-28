@@ -118,9 +118,6 @@ class Car(object):
             self.vx = u[0] * a + v[0] * b
             self.vy = u[1] * a + v[1] * b
 
-            self.vx = u[0] * a + v[0] * b
-            self.vy = u[1] * a + v[1] * b
-
             # http://dev.physicslab.org/Document.aspx?doctype=3&filename=CircularMotion_CentripetalAcceleration.xml
             # centripetal acceleration a_c in direction of the circle center (i.e. along u):
             a_c = 2 * math.pi * r * d_th
