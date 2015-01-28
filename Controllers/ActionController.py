@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import division    # Standardmäßig float division - Ganzzahldivision kann man explizit mit '//' durchführen
 
-class ActionController(object):
+from Controller import Controller
+
+class ActionController(Controller):
     """docstring for ActionController"""
     def __init__(self):
         super(ActionController, self).__init__()
