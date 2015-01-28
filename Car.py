@@ -61,15 +61,15 @@ class Car(object):
             u = v[1],-v[0] # von (x_0,y_0) in richtung mittelpunkt, normale der tangente
             a = r * (1 - math.cos(abs(d_th)*Utils.d2r)) # projektion x1,y1 auf u
             c = r * math.sin(abs(d_th)*Utils.d2r) # projektion von x1,y1 auf c
-            vx = u[0] * a + v[0] * c
-            vy = u[1] * a + v[1] * c
+            self.vx = u[0] * a + v[0] * c
+            self.vy = u[1] * a + v[1] * c
 
         else:
-            vx = math.cos(self.theta*Utils.d2r) * self.speed * dt
-            vy = math.sin(self.theta*Utils.d2r) * self.speed * dt
+            self.vx = math.cos(self.theta*Utils.d2r) * self.speed * dt
+            self.vy = math.sin(self.theta*Utils.d2r) * self.speed * dt
 
-        self.x += vx
-        self.y += vy
+        self.x += self.vx
+        self.y += self.vy
 
         return self
 
