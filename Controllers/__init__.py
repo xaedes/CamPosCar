@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from Controller import *
+from ActionController import *
+from INSGhostController import *
 from HumanController import *
 from NodeController import *
 from OneStepLookaheadController import *
