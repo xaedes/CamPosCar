@@ -238,10 +238,7 @@ class App(object):
                     if not car.pause:
                         if car.controller is None:
                             car.controller = self.controller
-                        action = car.controller.compute_action(car)
-                        car.controller.action = action
-                        car.forward(action,dt)
-
+                        car.controller.update(car,dt)
 
             # --- Drawing code should go here
          
