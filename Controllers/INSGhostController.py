@@ -3,6 +3,7 @@
 from __future__ import division    # Standardmäßig float division - Ganzzahldivision kann man explizit mit '//' durchführen
 
 from Controller import Controller
+from Utils import Utils
 
 class INSGhostController(Controller):
     """docstring for INSGhostController"""

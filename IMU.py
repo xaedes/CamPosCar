@@ -20,18 +20,18 @@ class IMU(object):
         self.calibration_noise = ImuCalibration.AddNoise(self.calibration)
 
     def get_accel_sample(self):
-        return self.calibration.accel_x_scale *
+        return self.calibration.accel_scale * \
                  Utils.add_noise(
                     self.car.ax_local + self.calibration.accel_x_bias, 
                     self.calibration.accel_x_variance)
 
     def get_odometer_sample(self):
         return Utils.add_noise(
-                    self.speed, 
+                    self.car.speed, 
                     self.calibration.odometer_variance)
 
     def get_gyro_sample(self):
-        return self.calibration.gyro_scale *
+        return self.calibration.gyro_scale * \
                  Utils.add_noise(
                     self.car.gyro + self.calibration.gyro_z_bias, 
                     self.calibration.gyro_z_variance)

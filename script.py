@@ -33,6 +33,8 @@ from Window import Window
 from Events import Events
 from Utils import Utils
 from CamView import CamView
+from INS import INS
+from IMU import IMU
 
 import math
 from copy import copy
@@ -67,20 +69,31 @@ class App(object):
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
         self.cars.append(Car(x=250,y=100,theta=-45,speed=1.5*90))
-        self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90))
+        self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [-2] human
+        self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [-1] ghost of ins estimating [-3]
+
         self.action = None
         self.human = HumanController()
-
-        self.camview = CamView(self.cars[0],pygame.surfarray.array3d(self.background.img))
-        self.camview.register_events(self.events)
-
-        self.cars[-1].controller = self.human
         self.heuristic = Heuristic(self.lane)
         Node.heuristic = self.heuristic
+
         self.onestep = OneStepLookaheadController(self.cars,self.lane,self.heuristic)
         self.nstep = NStepLookaheadController(self.cars,self.lane, self.heuristic, 2)
         self.bestfirst = BestFirstController(self.cars,self.lane, self.heuristic)
         self.controller = self.bestfirst
+
+        self.camview = CamView(self.cars[0],pygame.surfarray.array3d(self.background.img))
+        self.camview.register_events(self.events)
+
+        self.cars[-3].controller = self.controller
+        self.cars[-3].imu = IMU(self.cars[-3])
+        self.cars[-3].ins = INS(self.cars[-3].imu.calibration_noise)
+        self.insghost = INSGhostController(self.cars[-3].ins)
+        self.cars[-2].controller = self.human
+        self.cars[-1].controller = self.insghost
+        self.cars[-1].collision = False
+        self.cars[-1].size *= 1.25
+
 
 
         # self.window = Window(self.screen, self.events, 300, 200, "caption")
@@ -208,6 +221,10 @@ class App(object):
                 self.update_distance_grid()
         # pass
 
+    def update_ins(self,car,dt):
+        car.ins.update_pose(car.x, car.y, (car.theta-180) * Utils.d2r)
+        car.ins.update(car.imu.get_sensor_array(), dt)
+
     def spin(self):
         # Loop until the user clicks the close button.
         self.done = False
@@ -233,12 +250,21 @@ class App(object):
             self.input()
 
             # --- Game logic should go here
-            if self.controller is not None:
-                for car in self.cars:
-                    if not car.pause:
-                        if car.controller is None:
-                            car.controller = self.controller
+
+            # update ins 
+            self.update_ins(self.cars[-3],dt)
+
+            # apply controllers
+            for car in self.cars:
+                if not car.pause:
+                    # eventually set default controller
+                    if car.controller is None and self.controller is not None:
+                        car.controller = self.controller
+
+                    # apply controller
+                    if car.controller is not None:
                         car.controller.update(car,dt)
+
 
             # --- Drawing code should go here
          

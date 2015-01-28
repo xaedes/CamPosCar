@@ -17,6 +17,7 @@ class Car(object):
     def __init__(self, x, y, theta, speed=2*90, max_steer=0.2*15/(1/60), size=10):
         super(Car, self).__init__()
         self.size = size
+        self.collision = True
         self.x = x
         self.y = y
         self.theta = theta # in degree

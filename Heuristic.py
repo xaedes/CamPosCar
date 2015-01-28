@@ -37,27 +37,28 @@ class Heuristic(object):
 
         # avoid collisions with other cars
         for other_car in node.other_cars:
-            # detect if car comes from behind
-            normal = (-math.sin(node.car.theta),math.cos(node.car.theta))
-            diff = (other_car.x - node.car.x, other_car.y - node.car.y)
-            side = diff[0]*normal[0]+diff[1]*normal[1]
-            if side < -node.car.collision_radius()/2:
-                continue
+            if other_car.collision:
+                # detect if car comes from behind
+                normal = (-math.sin(node.car.theta),math.cos(node.car.theta))
+                diff = (other_car.x - node.car.x, other_car.y - node.car.y)
+                side = diff[0]*normal[0]+diff[1]*normal[1]
+                if side < -node.car.collision_radius()/2:
+                    continue
 
-            # consider only the worst collision
-            worst_collision = None
-            # distance to car
-            dist = Utils.distance_between(
-                        (other_car.x, other_car.y),
-                        (node.car.x, node.car.y))
-            if dist < (node.car.collision_radius() + other_car.collision_radius()):
-                collision_score = -1e10
-                collision_score += dist*dist
-                if worst_collision is None or collision_score < worst_collision:
-                    worst_collision = collision_score
+                # consider only the worst collision
+                worst_collision = None
+                # distance to car
+                dist = Utils.distance_between(
+                            (other_car.x, other_car.y),
+                            (node.car.x, node.car.y))
+                if dist < (node.car.collision_radius() + other_car.collision_radius()):
+                    collision_score = -1e10
+                    collision_score += dist*dist
+                    if worst_collision is None or collision_score < worst_collision:
+                        worst_collision = collision_score
 
-            if worst_collision is not None:
-                score = worst_collision
+                if worst_collision is not None:
+                    score = worst_collision
 
 
 

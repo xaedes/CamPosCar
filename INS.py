@@ -64,6 +64,17 @@ class INS(object):
         Z[[3,4]] -= self.imuCalibration.mag_offset
         Z[[3,4]] /= self.imuCalibration.mag_scale       
         return Z
+
+    def update_pose(self, pos_x, pos_y, orientation):
+        gain = 0.9
+        self.vx_integrated.sum = gain*pos_x + (1-gain)*self.vx_integrated.sum
+        self.vy_integrated.sum = gain*pos_y + (1-gain)*self.vy_integrated.sum
+        self.gyro_integrated.sum = gain*orientation + (1-gain)*self.gyro_integrated.sum
+        self.orientation_error.update(np.matrix([0]))
+        self.orientation_error.update(np.matrix([0]))
+        self.orientation_error.update(np.matrix([0]))
+        self.orientation_error.update(np.matrix([0]))
+
     def update(self, Z, dt):
         # Z contains data for ['accel','odometer','gyro','mag_x', 'mag_y']
         #                       0       1          2      3        4
