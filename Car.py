@@ -115,13 +115,12 @@ class Car(object):
         # calculate global acceleration
         self.ax = (self.vx - self.last["vx"]) / dt
         self.ay = (self.vy - self.last["vy"]) / dt
-        g = 0.1
+        g = 0.4
         self.ax = g * self.ax + (1-g) * self.last["ax"]
         self.ay = g * self.ay + (1-g) * self.last["ay"]
 
         # calculate local acceleration
-        self.ax_local, self.ay_local = Utils.rotate_points([(self.ax,self.ay)],self.theta)[0]
-        g = 0.1
+        self.ax_local, self.ay_local = Utils.rotate_points([(self.ax,self.ay)],-self.theta)[0]
         self.ax_local = g * self.ax_local + (1-g) * self.last["ax_local"]
         self.ay_local = g * self.ay_local + (1-g) * self.last["ay_local"]
 
