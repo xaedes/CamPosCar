@@ -62,3 +62,7 @@ class Utils(object):
         translated = Utils.translate_points(rotated,*center)
 
         return translated
+
+    @classmethod
+    def add_noise(CLS, value, variance):
+        return value + np.random.normal(0,math.sqrt(variance))
