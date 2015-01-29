@@ -10,7 +10,10 @@ class ActionController(Controller):
         super(ActionController, self).__init__()
 
     def update(self, car, dt):
-        self.action = self.compute_action(car)
+        if hasattr(car, "ghost"):
+            self.action = self.compute_action(car.ghost)
+        else:
+            self.action = self.compute_action(car)
         car.forward(self.action,dt)
 
     def compute_action(self,car):

@@ -97,6 +97,7 @@ class App(object):
         self.cars[0].camview.register_events(self.events)
 
         self.cars[0].controller = self.controller
+        self.cars[0].collision = False
         self.cars[0].imu = IMU(self.cars[0])
         self.cars[0].ins = INS(self.cars[0].imu.calibration_noise)
         self.insghost = INSGhostController(self.cars[0].ins)
@@ -108,6 +109,8 @@ class App(object):
                                         width = 275,height = 275, offset=(0,75), angle_offset = -25)
         self.cars[2].camview.register_events(self.events)
 
+        # this causes the controller of cars[0] to use the information from cars[0].ghost but act on cars[0]
+        self.cars[0].ghost = self.cars[2]
 
         # self.window = Window(self.screen, self.events, 300, 200, "caption")
 
