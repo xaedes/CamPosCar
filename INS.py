@@ -69,8 +69,7 @@ class INS(object):
         Z[[3,4]] /= self.imuCalibration.mag_scale       
         return Z
 
-    def update_pose(self, pos_x, pos_y, orientation):
-        gain = 1
+    def update_pose(self, pos_x, pos_y, orientation, gain = 0.01):
         self.vx_integrated.sum = gain*pos_x + (1-gain)*self.vx_integrated.sum
         self.vy_integrated.sum = gain*pos_y + (1-gain)*self.vy_integrated.sum
         # self.states['orientation'] = gain*orientation + (1-gain)*self.states['orientation']
