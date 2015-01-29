@@ -144,7 +144,7 @@ class INS(object):
 
         # feed through gyro
         self.states['yaw_rate'] = sensor_gyro
-        print self.states['yaw_rate'] / Utils.d2r
+        # print self.states['yaw_rate'] / Utils.d2r
 
         # output positions
         self.states['pos_x'] = self.vx_integrated.sum

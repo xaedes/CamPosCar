@@ -20,6 +20,9 @@ import pygame
  
 import pygame
 
+import cv2
+from cv2 import cv
+
 from time import time
 
 from Background import Background
@@ -69,8 +72,8 @@ class App(object):
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
         self.cars.append(Car(x=250,y=100,theta=-45,speed=1.5*90))
-        self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [-2] human
-        self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [-1] ghost of ins estimating [-3]
+        self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [1] human
+        self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [2] ghost of ins estimating [0]
 
         self.action = None
         self.human = HumanController()
@@ -82,17 +85,20 @@ class App(object):
         self.bestfirst = BestFirstController(self.cars,self.lane, self.heuristic)
         self.controller = self.bestfirst
 
-        self.camview = CamView(self.cars[0],pygame.surfarray.array3d(self.background.img))
-        self.camview.register_events(self.events)
+        self.cars[0].camview = CamView(self.cars[0],pygame.surfarray.array3d(self.background.img))
+        self.cars[0].camview.register_events(self.events)
 
-        self.cars[-3].controller = self.controller
-        self.cars[-3].imu = IMU(self.cars[-3])
-        self.cars[-3].ins = INS(self.cars[-3].imu.calibration_noise)
-        self.insghost = INSGhostController(self.cars[-3].ins)
-        self.cars[-2].controller = self.human
-        self.cars[-1].controller = self.insghost
-        self.cars[-1].collision = False
-        self.cars[-1].size *= 1.25
+        self.cars[0].controller = self.controller
+        self.cars[0].imu = IMU(self.cars[0])
+        self.cars[0].ins = INS(self.cars[0].imu.calibration_noise)
+        self.insghost = INSGhostController(self.cars[0].ins)
+        self.cars[1].controller = self.human
+        self.cars[2].controller = self.insghost
+        self.cars[2].collision = False
+        self.cars[2].size *= 1.25
+        self.cars[2].camview = CamView(self.cars[2],pygame.surfarray.array3d(self.background.img),
+                                        width = 275,height = 275, offset=(0,75), angle_offset = -25)
+        self.cars[2].camview.register_events(self.events)
 
 
 
@@ -129,7 +135,32 @@ class App(object):
 
         self.lane.draw(self.screen)
 
-        self.camview.draw(self.screen)
+        # self.camview.draw(self.screen)
+
+        # blende tatsächlichen view in view von ins estimated ein
+        actual_view = self.cars[0].camview.view
+        ins_view = self.cars[2].camview.view
+        if actual_view is not None and ins_view is not None:
+            actual_view = actual_view.copy()
+            ins_view = ins_view.copy()
+            low_x = math.floor(actual_view.shape[0] / 2)
+            hgh_x = low_x + math.ceil((actual_view.shape[0] / 2) - low_x)
+            low_y = math.floor(actual_view.shape[1] / 2)
+            hgh_y = low_y + math.ceil((actual_view.shape[1] / 2) - low_y)
+            x1 = self.cars[2].camview.offset[0]+math.floor(ins_view.shape[0]/2)-low_x
+            x2 = self.cars[2].camview.offset[0]+math.floor(ins_view.shape[0]/2)+hgh_x
+            y1 = 0*(ins_view.shape[1]-actual_view.shape[1])+math.floor(self.cars[2].camview.offset[1])
+            y2 = 0*(ins_view.shape[1]-actual_view.shape[1])+math.floor(self.cars[2].camview.offset[1])+actual_view.shape[1]
+            print "--"
+            print 125,actual_view.shape,ins_view.shape
+            print y1,y2,y2-y1
+            print x1,x2,x2-x1
+            print ins_view[y1:y2,x1:x2].shape
+            print actual_view.shape
+            # print (actual_view[:,:,:] < ins_view[y1:y2,x1:x2,:]).shape
+            np.minimum(actual_view[:,:,:],ins_view[y1:y2,x1:x2,:],ins_view[y1:y2,x1:x2,:])
+            
+            cv2.imshow("0 in 2",ins_view)
 
         # Draw car
         for car in self.cars:
@@ -140,6 +171,8 @@ class App(object):
 
             else:
                 car.draw(self.screen)
+            if hasattr(car, "camview"):
+                car.camview.draw(self.screen)
 
     def on_keyup(self, event):
         if event.key == pygame.K_SPACE:
@@ -222,10 +255,10 @@ class App(object):
         # pass
 
     def update_ins(self,car,dt):
-        print "--"
+        # print "--"
         # print car.speed
         # print car.theta
-        print car.gyro
+        # print car.gyro
         car.ins.update_pose(car.x, car.y, (car.theta-180) * Utils.d2r)
         car.ins.update(car.imu.get_sensor_array(), dt)
 
@@ -255,9 +288,6 @@ class App(object):
 
             # --- Game logic should go here
 
-            # update ins 
-            self.update_ins(self.cars[-3],dt)
-
             # apply controllers
             for car in self.cars:
                 if not car.pause:
@@ -268,6 +298,10 @@ class App(object):
                     # apply controller
                     if car.controller is not None:
                         car.controller.update(car,dt)
+
+                    # update ins 
+                    if hasattr(car,"ins"):
+                        self.update_ins(car,dt)
 
 
             # --- Drawing code should go here

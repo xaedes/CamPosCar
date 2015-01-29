@@ -23,6 +23,7 @@ class CamView(object):
         self.img = imageArr.transpose(1, 0, 2) # flip x and y axes
         self.width = width
         self.height = height
+        self.view = None
 
         # offset specifies (in car coordinate system, y=driving direction), 
         # where the center of the view is
@@ -49,8 +50,8 @@ class CamView(object):
         theta += 180 # upside down
 
         view = self.subimage(self.img, pos, theta , self.width, self.height)
-
-        cv2.imshow("",view)
+        self.view = view
+        cv2.imshow("car " + str(self.car.id),view)
         cv2.waitKey(1)
 
         Draw.draw_rotated_rect(screen,pos[0],pos[1],self.width,self.height,theta,Draw.RED)
