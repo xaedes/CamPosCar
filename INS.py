@@ -24,11 +24,15 @@ class WienerKalman(Kalman):
     def __init__(self, dt=0.01, white_noise_scale=1, R=1):
         super(WienerKalman, self).__init__(1,1)
         self.dt = dt
+        self.white_noise_scale = white_noise_scale
         self.H[0,0] = 1 
         self.F *= 1 # integration
-        self.Q *= self.dt * white_noise_scale  
+        self.Q *= self.dt * self.white_noise_scale  
         self.R *= R
         self.P *= 0
+    def update_dt(self, dt):
+        self.dt = dt
+        self.Q = np.matrix(np.identity(1)) * self.dt * self.white_noise_scale
 
 
 class INS(object):
@@ -89,6 +93,9 @@ class INS(object):
         sensor_gyro = Z[2]
         sensor_mag_x = Z[3]
         sensor_mag_y = Z[4]
+
+        self.orientation_error.update_dt(dt)
+        self.velocity_error.update_dt(dt)
 
 
         # integrate gyro to get orientation estimate
