@@ -34,21 +34,21 @@ class ImuCalibration(object):
     def AddNoise(CLS, calib):
         noised = ImuCalibration()
         # in m/s2 
-        noised.accel_scale = Utils.add_noise(calib.accel_scale, (0.05)**2)
-        noised.accel_x_bias = Utils.add_noise(calib.accel_x_bias, (0.05)**2)
-        noised.accel_x_variance = Utils.add_noise(calib.accel_x_variance, (0.1)**2)
+        noised.accel_scale = calib.accel_scale + Utils.add_noise(0, (0.05)**2)
+        noised.accel_x_bias = calib.accel_x_bias + Utils.add_noise(0, (0.05)**2)
+        noised.accel_x_variance = calib.accel_x_variance + abs(Utils.add_noise(0, (0.1)**2))
 
         # in rad / s
-        noised.gyro_scale = Utils.add_noise(calib.gyro_scale, (0.05)**2)
-        noised.gyro_z_bias = Utils.add_noise(calib.gyro_z_bias, (0.05)**2)
-        noised.gyro_z_variance = Utils.add_noise(calib.gyro_z_variance, (0.1*Utils.d2r)**2)
+        noised.gyro_scale = calib.gyro_scale + Utils.add_noise(0, (0.05)**2)
+        noised.gyro_z_bias = calib.gyro_z_bias + Utils.add_noise(0, (0.05)**2)
+        noised.gyro_z_variance = calib.gyro_z_variance + abs(Utils.add_noise(0, (0.1*Utils.d2r)**2))
 
         # in rad
-        noised.mag_scale = Utils.add_noise(calib.mag_scale, (0.05)**2)
-        noised.mag_offset = Utils.add_noise(calib.mag_offset, (0.05)**2)
-        noised.mag_theta_variance = Utils.add_noise(calib.mag_theta_variance, (1*Utils.d2r)**2)
+        noised.mag_scale = calib.mag_scale + Utils.add_noise(0, (0.05)**2)
+        noised.mag_offset = calib.mag_offset + Utils.add_noise(0, (0.05)**2)
+        noised.mag_theta_variance = calib.mag_theta_variance + abs(Utils.add_noise(0, (1*Utils.d2r)**2))
 
         # in m/s
-        noised.odometer_variance = Utils.add_noise(calib.odometer_variance, (0.1)**2)
+        noised.odometer_variance =calib.odometer_variance + abs(Utils.add_noise(0, (0.1)**2))
 
         return noised
