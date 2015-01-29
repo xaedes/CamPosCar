@@ -33,12 +33,12 @@ class IMU(object):
     def get_gyro_sample(self):
         return self.calibration.gyro_scale * \
                  Utils.add_noise(
-                    self.car.gyro + self.calibration.gyro_z_bias, 
+                    self.car.gyro * Utils.d2r+ self.calibration.gyro_z_bias, 
                     self.calibration.gyro_z_variance)
 
     def get_mag_sample(self):
         theta_sample = self.calibration.mag_scale * Utils.add_noise(
-                            self.car.theta + self.calibration.mag_offset, 
+                            (self.car.theta+90) * Utils.d2r + self.calibration.mag_offset, 
                             self.calibration.mag_theta_variance)
         return math.cos(theta_sample),math.sin(theta_sample),theta_sample
 

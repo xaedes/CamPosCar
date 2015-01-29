@@ -136,12 +136,12 @@ class Car(object):
 
 
 
-        if self.id == 0:
-            print "---"
-            print "self.ax", self.ax
-            print "self.ay", self.ay
-            print "self.ax_local", self.ax_local
-            print "self.ay_local", self.ay_local
+        # if self.id == 0:
+        #     print "---"
+        #     print "self.ax", self.ax
+        #     print "self.ay", self.ay
+        #     print "self.ax_local", self.ax_local
+        #     print "self.ay_local", self.ay_local
             # print self.gyro
 
         return self

@@ -222,6 +222,10 @@ class App(object):
         # pass
 
     def update_ins(self,car,dt):
+        print "--"
+        # print car.speed
+        # print car.theta
+        print car.gyro
         car.ins.update_pose(car.x, car.y, (car.theta-180) * Utils.d2r)
         car.ins.update(car.imu.get_sensor_array(), dt)
 

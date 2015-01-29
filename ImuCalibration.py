@@ -15,7 +15,7 @@ class ImuCalibration(object):
         # in m/s2 
         self.accel_scale = 1.0
         self.accel_x_bias = 0
-        self.accel_x_variance = (0.2) ** 2 # einfach mal so angenommen...
+        self.accel_x_variance = (0.02) ** 2 # einfach mal so angenommen...
 
         # in rad / s
         self.gyro_scale = 1.0
@@ -25,10 +25,10 @@ class ImuCalibration(object):
         # in rad
         self.mag_scale = 1.0
         self.mag_offset = 0
-        self.mag_theta_variance = (1 * Utils.d2r) ** 2 # std=5°
+        self.mag_theta_variance = (0.1 * Utils.d2r) ** 2 # std=5°
 
         # in m/s
-        self.odometer_variance = (0.2) ** 2
+        self.odometer_variance = (0.02) ** 2
 
     @classmethod
     def AddNoise(CLS, calib):

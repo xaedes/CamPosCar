@@ -66,14 +66,15 @@ class INS(object):
         return Z
 
     def update_pose(self, pos_x, pos_y, orientation):
-        gain = 0.9
+        gain = 1
         self.vx_integrated.sum = gain*pos_x + (1-gain)*self.vx_integrated.sum
         self.vy_integrated.sum = gain*pos_y + (1-gain)*self.vy_integrated.sum
-        self.gyro_integrated.sum = gain*orientation + (1-gain)*self.gyro_integrated.sum
-        self.orientation_error.update(np.matrix([0]))
-        self.orientation_error.update(np.matrix([0]))
-        self.orientation_error.update(np.matrix([0]))
-        self.orientation_error.update(np.matrix([0]))
+        # self.states['orientation'] = gain*orientation + (1-gain)*self.states['orientation']
+        # self.gyro_integrated.sum = self.states['orientation']
+        # self.orientation_error.update(np.matrix([0]))
+        # self.orientation_error.update(np.matrix([0]))
+        # self.orientation_error.update(np.matrix([0]))
+        # self.orientation_error.update(np.matrix([0]))
 
     def update(self, Z, dt):
         # Z contains data for ['accel','odometer','gyro','mag_x', 'mag_y']
@@ -81,6 +82,7 @@ class INS(object):
 
         # calibrate sensors
         Z = self.calibrate_sensors(Z)
+
 
         sensor_accel = Z[0]
         sensor_odometer = Z[1]
@@ -135,6 +137,7 @@ class INS(object):
 
         # feed through gyro
         self.states['yaw_rate'] = sensor_gyro
+        print self.states['yaw_rate'] / Utils.d2r
 
         # output positions
         self.states['pos_x'] = self.vx_integrated.sum
