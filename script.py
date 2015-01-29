@@ -117,6 +117,15 @@ class App(object):
 
         self.done = False
 
+        for car in self.cars:
+            # save original speed
+            if not hasattr(car,"speed_on"):
+                car.speed_on = car.speed
+            # toggle speed
+            car.speed = car.speed_on - car.speed
+
+            car.pause = not car.pause        
+
         self.register_events()
         self.spin()
 
