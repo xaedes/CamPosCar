@@ -105,9 +105,9 @@ class INS(object):
         mag = np.arctan2(sensor_mag_y,sensor_mag_x)
         
         # first orientation from magnetometer should be zero
-        if self.mag_offset is None:
-            self.mag_offset = mag
-        mag -= self.mag_offset
+        # if self.mag_offset is None:
+        #     self.mag_offset = mag
+        # mag -= self.mag_offset
 
         # fix orientation 2pi jumps
         mag_diff = mag - self.states['orientation']

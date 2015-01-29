@@ -33,14 +33,15 @@ class IMU(object):
     def get_gyro_sample(self):
         return self.calibration.gyro_scale * \
                  Utils.add_noise(
-                    self.car.gyro * Utils.d2r+ self.calibration.gyro_z_bias, 
+                    (self.car.gyro) * Utils.d2r+ self.calibration.gyro_z_bias, 
                     self.calibration.gyro_z_variance)
 
     def get_mag_sample(self):
-        theta_sample = self.calibration.mag_scale * Utils.add_noise(
-                            (self.car.theta+90) * Utils.d2r + self.calibration.mag_offset, 
+        theta_sample = Utils.add_noise(
+                            (self.car.theta) * Utils.d2r, 
                             self.calibration.mag_theta_variance)
-        return math.cos(theta_sample),math.sin(theta_sample),theta_sample
+        return self.calibration.mag_scale * (self.calibration.mag_offset + math.cos(theta_sample)), \
+               self.calibration.mag_scale * (self.calibration.mag_offset + math.sin(theta_sample)),theta_sample
 
     def get_sensor_array(self):
         # Z contains data for ['accel','odometer','gyro','mag_x', 'mag_y']
