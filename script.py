@@ -52,8 +52,15 @@ class App(object):
         super(App, self).__init__()
         
         self.background = Background(filename="background.png")
-
-        # a=pygame.surfarray.array3d(self.background.img)
+        self.background.arr = pygame.surfarray.array3d(self.background.img)
+        _,self.background.arr_bw = cv2.threshold(self.background.arr[:,:,0],128,1,cv2.THRESH_BINARY)
+        # print self.background.arr_bw.shape, self.background.arr_bw.dtype
+        self.background.arr_dist = cv2.distanceTransform(self.background.arr_bw, cv.CV_DIST_L1, 3)
+        self.background.arr_dist_rgb = self.background.arr.copy()
+        self.background.arr_dist_rgb[:,:,0] = self.background.arr_dist
+        self.background.arr_dist_rgb[:,:,1] = self.background.arr_dist
+        self.background.arr_dist_rgb[:,:,2] = self.background.arr_dist
+        print self.background.arr_dist
         # print a.shape
 
         self.setup_pygame()
@@ -85,7 +92,8 @@ class App(object):
         self.bestfirst = BestFirstController(self.cars,self.lane, self.heuristic)
         self.controller = self.bestfirst
 
-        self.cars[0].camview = CamView(self.cars[0],pygame.surfarray.array3d(self.background.img))
+
+        self.cars[0].camview = CamView(self.cars[0],self.background.arr)
         self.cars[0].camview.register_events(self.events)
 
         self.cars[0].controller = self.controller
@@ -96,10 +104,9 @@ class App(object):
         self.cars[2].controller = self.insghost
         self.cars[2].collision = False
         self.cars[2].size *= 1.25
-        self.cars[2].camview = CamView(self.cars[2],pygame.surfarray.array3d(self.background.img),
+        self.cars[2].camview = CamView(self.cars[2],self.background.arr_dist_rgb,
                                         width = 275,height = 275, offset=(0,75), angle_offset = -25)
         self.cars[2].camview.register_events(self.events)
-
 
 
         # self.window = Window(self.screen, self.events, 300, 200, "caption")
@@ -151,16 +158,17 @@ class App(object):
             x2 = self.cars[2].camview.offset[0]+math.floor(ins_view.shape[0]/2)+hgh_x
             y1 = 0*(ins_view.shape[1]-actual_view.shape[1])+math.floor(self.cars[2].camview.offset[1])
             y2 = 0*(ins_view.shape[1]-actual_view.shape[1])+math.floor(self.cars[2].camview.offset[1])+actual_view.shape[1]
-            print "--"
-            print 125,actual_view.shape,ins_view.shape
-            print y1,y2,y2-y1
-            print x1,x2,x2-x1
-            print ins_view[y1:y2,x1:x2].shape
-            print actual_view.shape
+            # print "--"
+            # print 125,actual_view.shape,ins_view.shape
+            # print y1,y2,y2-y1
+            # print x1,x2,x2-x1
+            # print ins_view[y1:y2,x1:x2].shape
+            # print actual_view.shape
             # print (actual_view[:,:,:] < ins_view[y1:y2,x1:x2,:]).shape
             np.minimum(actual_view[:,:,:],ins_view[y1:y2,x1:x2,:],ins_view[y1:y2,x1:x2,:])
             
             cv2.imshow("0 in 2",ins_view)
+        cv2.imshow("bg dist",self.background.arr_dist/self.background.arr_dist.max())
 
         # Draw car
         for car in self.cars:
