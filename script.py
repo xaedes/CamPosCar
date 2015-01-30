@@ -80,7 +80,7 @@ class App(object):
         self.cars = []
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
-        self.cars.append(Car(x=250,y=100,theta=-45,speed=3*90))
+        self.cars.append(Car(x=250,y=100,theta=-45,speed=1 * 1.5*90))
         self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [1] human
         self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [2] ghost of ins estimating [0]
 
@@ -102,6 +102,7 @@ class App(object):
         self.cars[0].collision = False
         self.cars[0].imu = IMU(self.cars[0])
         self.cars[0].ins = INS(self.cars[0].imu.calibration_noise)
+        self.cars[0].ins.update_pose(self.cars[0].x, self.cars[0].y, self.cars[0].theta / Utils.d2r, gain = 1)
         self.insghost = INSGhostController(self.cars[0].ins)
         self.cars[1].controller = self.human
         self.cars[2].controller = self.insghost
@@ -110,6 +111,7 @@ class App(object):
         self.cars[2].camview = CamView(self.cars[2],self.background.arr_dist_rgb,
                                         width = 275,height = 275, offset=(0,75), angle_offset = -25)
         self.cars[2].camview.register_events(self.events)
+
 
         # this causes the controller of cars[0] to use the information from cars[0].ghost but act on cars[0]
         self.cars[0].ghost = self.cars[2]
@@ -190,42 +192,42 @@ class App(object):
             # show image
             cv2.imshow("0 in 2",ins_view)
 
-            # bw
-            bw = actual_view[:,:,0]
+        #     # # bw
+        #     # bw = actual_view[:,:,0]
 
-            # extract edge pixel positions from actual_view
-            xx,yy = np.meshgrid(*map(np.arange,bw.shape))
-            xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
-            # edge = np.array(zip(yy,xx),dtype="int32")
+        #     # # extract edge pixel positions from actual_view
+        #     # xx,yy = np.meshgrid(*map(np.arange,bw.shape))
+        #     # xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
+        #     # # edge = np.array(zip(yy,xx),dtype="int32")
             
-            xx,yy = xx[::4],yy[::4]
-            xx,yy = yy,xx
-            if xx.shape[0] > 0:
-                # transform edge positions into car coordinate system, with car position on (0,0) and y-axis pointing to driving direction
-                # reverses camview offset and angle offset
-                # yy -= self.cars[0].camview.offset[0]
-                xx = self.cars[0].camview.width - (xx)
-                xx -= self.cars[0].camview.offset[0] 
-                yy -= self.cars[0].camview.offset[1] 
-                # a second rotation to account for the car theta can be integrated into the camview.angle_offset rotation
-                xxyy = np.array(Utils.rotate_points(zip(xx,yy),self.cars[0].camview.angle_offset + self.cars[2].theta))
-                xx = xxyy[:,0]
-                yy = xxyy[:,1]
-                # add car offset
-                xx += self.cars[2].x
-                yy += self.cars[2].y
+        #     # xx,yy = xx[::5],yy[::5]
+        #     # xx,yy = yy,xx
+        #     # if xx.shape[0] > 0:
+        #     #     # transform edge positions into car coordinate system, with car position on (0,0) and y-axis pointing to driving direction
+        #     #     # reverses camview offset and angle offset
+        #     #     # yy -= self.cars[0].camview.offset[0]
+        #     #     xx = self.cars[0].camview.width - (xx)
+        #     #     xx -= self.cars[0].camview.offset[0] 
+        #     #     yy -= self.cars[0].camview.offset[1] 
+        #     #     # a second rotation to account for the car theta can be integrated into the camview.angle_offset rotation
+        #     #     xxyy = np.array(Utils.rotate_points(zip(xx,yy),self.cars[0].camview.angle_offset + self.cars[2].theta))
+        #     #     xx = xxyy[:,0]
+        #     #     yy = xxyy[:,1]
+        #     #     # add car offset
+        #     #     xx += self.cars[2].x
+        #     #     yy += self.cars[2].y
 
-                # to use as index
-                xx = np.round(xx).astype("int32")
-                yy = np.round(yy).astype("int32")
+        #     #     # to use as index
+        #     #     xx = np.round(xx).astype("int32")
+        #     #     yy = np.round(yy).astype("int32")
 
-            # transform edge positions into global card using ins estimate
+        #     # # transform edge positions into global card using ins estimate
 
-            # show edge on distance transformation of bg
-            tmp = (self.background.arr_dist/self.background.arr_dist.max()).copy()
-            in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<tmp.shape[0],yy<tmp.shape[1]))
-            tmp[xx[in_bounds],yy[in_bounds]] = tmp.max()
-            cv2.imshow("tmp",tmp)
+        #     # # show edge on distance transformation of bg
+        #     # tmp = (self.background.arr_dist/self.background.arr_dist.max()).copy()
+        #     # in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<tmp.shape[0],yy<tmp.shape[1]))
+        #     # tmp[xx[in_bounds],yy[in_bounds]] = tmp.max()
+        #     # cv2.imshow("tmp",tmp)
 
         # # show distance transformation of bg
         # cv2.imshow("bg dist",self.background.arr_dist/self.background.arr_dist.max())
@@ -327,8 +329,129 @@ class App(object):
         xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
         return np.array(zip(xx,yy))
 
+    def gradients(self, distances, positions):
+        indices = np.round(positions).astype("int32")
+
+        lower_bound_x = indices[:,0]>=0
+        lower_bound_y = indices[:,1]>=0
+        upper_bound_x = indices[:,0]<distances.shape[0]-1
+        upper_bound_y = indices[:,1]<distances.shape[1]-1
+        lower_bounds = np.logical_and(lower_bound_x, lower_bound_y)
+        upper_bounds = np.logical_and(upper_bound_x, upper_bound_y)
+        in_bounds_x = np.logical_and(lower_bound_x,upper_bound_x)
+        in_bounds_y = np.logical_and(lower_bound_y,upper_bound_y)
+        in_bounds = np.logical_and(lower_bounds,upper_bounds)
+
+        dx = distances[indices[in_bounds,0]+1,indices[in_bounds,1]] - distances[indices[in_bounds,0],indices[in_bounds,1]]
+        dy = distances[indices[in_bounds,0],indices[in_bounds,1]+1] - distances[indices[in_bounds,0],indices[in_bounds,1]]
+        # ds = positions - indices
+
+        gradients = np.zeros_like(positions)
+        gradients[in_bounds,0] = dx
+        gradients[in_bounds,1] = dy
+
+        # add borders
+        # left = np.logical_and(np.logical_not(lower_bound_x),in_bounds_y)
+        # right = np.logical_and(np.logical_not(upper_bound_x),in_bounds_y)
+        # top = np.logical_and(np.logical_not(lower_bound_y),in_bounds_x)
+        # bottom = np.logical_and(np.logical_not(upper_bound_y),in_bounds_x)
+
+        gradients[np.logical_not(lower_bound_x),0] = 2
+        gradients[np.logical_not(upper_bound_x),0] = -2
+        gradients[np.logical_not(lower_bound_y),1] = 2
+        gradients[np.logical_not(upper_bound_y),1] = -2
+
+        # todo
+
+        return gradients
+
+
+    def optimize_correction_gradient(self, edge_points, distances, camview_offset, camview_angle_offset, camview_width, x0, y0, theta0, skip = 1, maxiter=10, k=1):
+        # correct for cam view flipped coordinates and offset
+        if edge_points.shape[0] == 0:
+            return (0,0,0),0
+        edge_points[:,0] = camview_width - edge_points[:,0]
+        edge_points[:,0] -= camview_offset[0]
+        edge_points[:,1] -= camview_offset[1]
+
+        if skip > 0:
+            edge_points = edge_points[::(skip+1),:]
+
+        transformed = np.array(Utils.rotate_points(edge_points,camview_angle_offset + theta0))
+        transformed += (x0,y0)
+        gradients = self.gradients(distances, transformed)
+
+        # print gradients.mean(axis=0)
+
+        # edge_points must be corrected for cam view flipped coordinates and offset, not for angle_offset!
+        def error_function(param, edge_points, x0, y0, theta0, camview_angle_offset, distances, k=1):
+            x, y, theta = param
+            transformed = np.array(Utils.rotate_points(edge_points,camview_angle_offset + theta0 + theta))
+            transformed += (x0+x,y0+y)
+            indices = np.round(transformed).astype("int32")
+            errors = np.zeros(shape=(transformed.shape[0]),dtype="float32")
+
+            in_bounds = np.logical_and(
+                np.logical_and(
+                    indices[:,0]>=0,
+                    indices[:,1]>=0),
+                np.logical_and(
+                    indices[:,0]<distances.shape[0]-1,
+                    indices[:,1]<distances.shape[1]-1))
+
+            # get distances for transformed points in bounds 
+            errors[in_bounds] = distances[indices[in_bounds,0],indices[in_bounds,1]]
+
+            # add subpixel interpolation
+            dx = distances[indices[in_bounds,0]+1,indices[in_bounds,1]] - distances[indices[in_bounds,0],indices[in_bounds,1]]
+            dy = distances[indices[in_bounds,0],indices[in_bounds,1]+1] - distances[indices[in_bounds,0],indices[in_bounds,1]]
+            ds = transformed - indices
+            errors[in_bounds] += dx * ds[in_bounds,0] + dy * ds[in_bounds,1]
+            
+            # only use errors for transformed points in bounds
+            errors = errors[in_bounds]
+            
+            if k != 1:
+                errors = np.power(errors, k)
+            
+            if errors.shape[0] > 0:
+                error = errors.mean()
+            else:
+                error = 1e5
+
+            # print x, y, theta, error 
+            return error
+
+        # res = opt.minimize(error_function,(0,0,0),
+        #     args=(edge_points, x0, y0, theta0, camview_angle_offset, distances, k),
+        #     options={
+        #         "maxiter":maxiter,
+        #         "eps":1e-1
+        #         }
+        #     )
+        # print transformed [:10]
+        # print (transformed - [x0,y0])[:10]
+        # print gradients[:10]
+        # print np.cross((transformed - [x0,y0]),gradients)[:10]
+        # print np.cross((transformed - [x0,y0]),gradients).shape
+        # print np.array([[1,2], [4,5],[4,7],[3,9]])
+        # print np.array([[4,5], [1,2],[3,9],[4,7]])
+        # print np.cross(np.array([[1,2], [4,5],[4,7],[3,9]]),np.array([[4,5], [1,2],[3,9],[4,7]]))
+        
+        torques = np.cross(transformed - [x0,y0],gradients,axis=1)
+        # print torques.mean()
+
+        mean_gradient = gradients.mean(axis=0) * 5
+        mean_torque = torques.mean() * 0.1
+        resX = (mean_gradient[0],mean_gradient[1],mean_torque)
+        # return resX, 1/0.1
+        return resX, (error_function(resX, edge_points, x0, y0, theta0, camview_angle_offset, distances, k) / 50)
+        #,res.fun
+
     def optimize_correction(self, edge_points, distances, camview_offset, camview_angle_offset, camview_width, x0, y0, theta0, skip = 1, maxiter=10, k=1):
         # correct for cam view flipped coordinates and offset
+        if edge_points.shape[0] == 0:
+            return (0,0,0)
         edge_points[:,0] = camview_width - edge_points[:,0]
         edge_points[:,0] -= camview_offset[0]
         edge_points[:,1] -= camview_offset[1]
@@ -342,28 +465,47 @@ class App(object):
             transformed = np.array(Utils.rotate_points(edge_points,camview_angle_offset + theta0 + theta))
             transformed += (x0+x,y0+y)
             indices = np.round(transformed).astype("int32")
+            errors = np.zeros(shape=(transformed.shape[0]),dtype="float32")
+
             in_bounds = np.logical_and(
                 np.logical_and(
                     indices[:,0]>=0,
                     indices[:,1]>=0),
                 np.logical_and(
-                    indices[:,0]<distances.shape[0],
-                    indices[:,1]<distances.shape[1]))
-            indices = indices[in_bounds,:]
-            if k == 1:
-                errors = distances[indices[:,0],indices[:,1]]
+                    indices[:,0]<distances.shape[0]-1,
+                    indices[:,1]<distances.shape[1]-1))
+
+            # get distances for transformed points in bounds 
+            errors[in_bounds] = distances[indices[in_bounds,0],indices[in_bounds,1]]
+
+            # add subpixel interpolation
+            dx = distances[indices[in_bounds,0]+1,indices[in_bounds,1]] - distances[indices[in_bounds,0],indices[in_bounds,1]]
+            dy = distances[indices[in_bounds,0],indices[in_bounds,1]+1] - distances[indices[in_bounds,0],indices[in_bounds,1]]
+            ds = transformed - indices
+            errors[in_bounds] += dx * ds[in_bounds,0] + dy * ds[in_bounds,1]
+            
+            # only use errors for transformed points in bounds
+            errors = errors[in_bounds]
+            
+            if k != 1:
+                errors = np.power(errors, k)
+            
+            if errors.shape[0] > 0:
+                error = errors.mean()
             else:
-                errors = np.power(distances[indices[:,0],indices[:,1]], k)
-            error = errors.sum()
-            print x, y, theta, error 
+                error = 1e5
+
+            # print x, y, theta, error 
             return error
 
         res = opt.minimize(error_function,(0,0,0),
             args=(edge_points, x0, y0, theta0, camview_angle_offset, distances, k),
-            options={"maxiter":maxiter}
+            options={
+                "maxiter":maxiter,
+                "eps":1e-1
+                }
             )
-        print res
-        return res.x
+        return res.x, res.fun
 
 
 
@@ -372,8 +514,9 @@ class App(object):
         # print car.speed
         # print car.theta
         # print car.gyro
-        car.ins.update_pose(car.x, car.y, (car.theta) * Utils.d2r)
+
         car.ins.update(car.imu.get_sensor_array(), dt)
+        # car.ins.update_pose(car.x, car.y, (car.theta) * Utils.d2r,gain=0.05)
 
         actual_view = self.cars[0].camview.view
 
@@ -381,7 +524,7 @@ class App(object):
         bw = actual_view[:,:,0]
 
 
-        x_corr, y_corr, theta_corr = self.optimize_correction(
+        (x_corr, y_corr, theta_corr), error = self.optimize_correction_gradient(
             edge_points = self.zero_points(bw), 
             distances = self.background.arr_dist, 
             camview_offset = self.cars[0].camview.offset,
@@ -390,11 +533,21 @@ class App(object):
             x0 = car.ins.get_state("pos_x"),
             y0 = car.ins.get_state("pos_y"),
             theta0 = car.ins.get_state("orientation") / Utils.d2r,
-            skip = 4,
-            maxiter = 10
+            skip = 5,
+            maxiter = 1,
+            k = 2
             )
 
-        print x_corr, y_corr, theta_corr
+
+        # print x_corr, y_corr, theta_corr, error
+
+        car.ins.update_pose(
+            car.ins.get_state("pos_x")+x_corr, 
+            car.ins.get_state("pos_y")+y_corr, 
+            car.ins.get_state("orientation")+theta_corr*Utils.d2r,
+            # gain = 1)
+            gain = 1/error if error != 0 else 1)
+
 
     def spin(self):
         # Loop until the user clicks the close button.

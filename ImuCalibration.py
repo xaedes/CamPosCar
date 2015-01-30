@@ -25,7 +25,7 @@ class ImuCalibration(object):
         # in rad
         self.mag_scale = 1.0
         self.mag_offset = 0
-        self.mag_theta_variance = (25 * Utils.d2r) ** 2 # std=5°
+        self.mag_theta_variance = (5 * Utils.d2r) ** 2 # std=5°
 
         # in m/s
         self.odometer_variance = (0.02) ** 2

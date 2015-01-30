@@ -23,7 +23,14 @@ class Utils(object):
         # angle in degree
         ax, ay = at
         cs,sn=math.cos(angle*Utils.d2r),math.sin(angle*Utils.d2r)
-        return [(ax+(i-ax) * cs - (j-ay) * sn,ay+(i-ax) * sn + (j-ay) * cs) for (i,j) in points]
+        if type(points) == np.ndarray:
+            rotated = points.copy()
+            rotated[:,0] = ax+(points[:,0]-ax) * cs - (points[:,1]-ay) * sn
+            rotated[:,1] = ay+(points[:,0]-ax) * sn + (points[:,1]-ay) * cs
+            return rotated
+        else:
+            return [(ax+(i-ax) * cs - (j-ay) * sn,ay+(i-ax) * sn + (j-ay) * cs) for (i,j) in points]
+
     
     @classmethod
     def translate_points(CLS,points,x,y):
