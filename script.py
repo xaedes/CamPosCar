@@ -162,24 +162,33 @@ class App(object):
         if actual_view is not None and ins_view is not None:
             actual_view = actual_view.copy()
             ins_view = ins_view.copy()
+
+            # horizontal center alignment of  actual view and ins view
             low_x = math.floor(actual_view.shape[0] / 2)
             hgh_x = low_x + math.ceil((actual_view.shape[0] / 2) - low_x)
-            low_y = math.floor(actual_view.shape[1] / 2)
-            hgh_y = low_y + math.ceil((actual_view.shape[1] / 2) - low_y)
             x1 = self.cars[2].camview.offset[0]+math.floor(ins_view.shape[0]/2)-low_x
             x2 = self.cars[2].camview.offset[0]+math.floor(ins_view.shape[0]/2)+hgh_x
-            y1 = 0*(ins_view.shape[1]-actual_view.shape[1])+math.floor(self.cars[2].camview.offset[1])
-            y2 = 0*(ins_view.shape[1]-actual_view.shape[1])+math.floor(self.cars[2].camview.offset[1])+actual_view.shape[1]
-            # print "--"
-            # print 125,actual_view.shape,ins_view.shape
-            # print y1,y2,y2-y1
-            # print x1,x2,x2-x1
-            # print ins_view[y1:y2,x1:x2].shape
-            # print actual_view.shape
-            # print (actual_view[:,:,:] < ins_view[y1:y2,x1:x2,:]).shape
-            np.minimum(actual_view[:,:,:],ins_view[y1:y2,x1:x2,:],ins_view[y1:y2,x1:x2,:])
+
+            # vertical placement
+            y1 = math.floor(self.cars[2].camview.offset[1])
+            y2 = math.floor(self.cars[2].camview.offset[1])+actual_view.shape[1]
+
+            # draw edges of actual_view with white in ins_view
+            np.maximum(                  # only draw if brighter
+                255-actual_view[:,:,:],  #
+                ins_view[y1:y2,x1:x2,:], # 
+                ins_view[y1:y2,x1:x2,:]) # dst, in-place
             
+            # draw edges of actual_view with black in ins_view
+            # np.minimum(                  # only draw if darker
+            #     actual_view[:,:,:],
+            #     ins_view[y1:y2,x1:x2,:],
+            #     ins_view[y1:y2,x1:x2,:]) # dst, in-place
+            
+            # show image
             cv2.imshow("0 in 2",ins_view)
+
+        # show distance transformation of bg
         cv2.imshow("bg dist",self.background.arr_dist/self.background.arr_dist.max())
 
         # Draw car
