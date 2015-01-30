@@ -23,7 +23,7 @@ class Heuristic(object):
         if node.prevNode is not None:
             diff = node.closest_lane_idx - node.prevNode.closest_lane_idx
             diff -= np.round(diff / self.lane.path_len) * self.lane.path_len
-            score += diff * 100 
+            score += diff * 500 
 
         # reward smooth actions
         score -= 50 * np.array(node.action_history).std()

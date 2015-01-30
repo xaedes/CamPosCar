@@ -39,6 +39,8 @@ from CamView import CamView
 from INS import INS
 from IMU import IMU
 
+import scipy.optimize as opt
+
 import math
 from copy import copy
 # Define some colors
@@ -78,7 +80,7 @@ class App(object):
         self.cars = []
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
-        self.cars.append(Car(x=250,y=100,theta=-45,speed=1.5*90))
+        self.cars.append(Car(x=250,y=100,theta=-45,speed=3*90))
         self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [1] human
         self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [2] ghost of ins estimating [0]
 
@@ -188,8 +190,45 @@ class App(object):
             # show image
             cv2.imshow("0 in 2",ins_view)
 
-        # show distance transformation of bg
-        cv2.imshow("bg dist",self.background.arr_dist/self.background.arr_dist.max())
+            # bw
+            bw = actual_view[:,:,0]
+
+            # extract edge pixel positions from actual_view
+            xx,yy = np.meshgrid(*map(np.arange,bw.shape))
+            xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
+            # edge = np.array(zip(yy,xx),dtype="int32")
+            
+            xx,yy = xx[::4],yy[::4]
+            xx,yy = yy,xx
+            if xx.shape[0] > 0:
+                # transform edge positions into car coordinate system, with car position on (0,0) and y-axis pointing to driving direction
+                # reverses camview offset and angle offset
+                # yy -= self.cars[0].camview.offset[0]
+                xx = self.cars[0].camview.width - (xx)
+                xx -= self.cars[0].camview.offset[0] 
+                yy -= self.cars[0].camview.offset[1] 
+                # a second rotation to account for the car theta can be integrated into the camview.angle_offset rotation
+                xxyy = np.array(Utils.rotate_points(zip(xx,yy),self.cars[0].camview.angle_offset + self.cars[2].theta))
+                xx = xxyy[:,0]
+                yy = xxyy[:,1]
+                # add car offset
+                xx += self.cars[2].x
+                yy += self.cars[2].y
+
+                # to use as index
+                xx = np.round(xx).astype("int32")
+                yy = np.round(yy).astype("int32")
+
+            # transform edge positions into global card using ins estimate
+
+            # show edge on distance transformation of bg
+            tmp = (self.background.arr_dist/self.background.arr_dist.max()).copy()
+            in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<tmp.shape[0],yy<tmp.shape[1]))
+            tmp[xx[in_bounds],yy[in_bounds]] = tmp.max()
+            cv2.imshow("tmp",tmp)
+
+        # # show distance transformation of bg
+        # cv2.imshow("bg dist",self.background.arr_dist/self.background.arr_dist.max())
 
         # Draw car
         for car in self.cars:
@@ -283,6 +322,51 @@ class App(object):
                 self.update_distance_grid()
         # pass
 
+    def zero_points(self, bw):
+        xx,yy = np.meshgrid(*map(np.arange,bw.shape))
+        xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
+        return np.array(zip(xx,yy))
+
+    def optimize_correction(self, edge_points, distances, camview_offset, camview_angle_offset, camview_width, x0, y0, theta0, skip = 1, maxiter=10, k=1):
+        # correct for cam view flipped coordinates and offset
+        edge_points[:,0] = camview_width - edge_points[:,0]
+        edge_points[:,0] -= camview_offset[0]
+        edge_points[:,1] -= camview_offset[1]
+
+        if skip > 0:
+            edge_points = edge_points[::(skip+1),:]
+
+        # edge_points must be corrected for cam view flipped coordinates and offset, not for angle_offset!
+        def error_function(param, edge_points, x0, y0, theta0, camview_angle_offset, distances, k=1):
+            x, y, theta = param
+            transformed = np.array(Utils.rotate_points(edge_points,camview_angle_offset + theta0 + theta))
+            transformed += (x0+x,y0+y)
+            indices = np.round(transformed).astype("int32")
+            in_bounds = np.logical_and(
+                np.logical_and(
+                    indices[:,0]>=0,
+                    indices[:,1]>=0),
+                np.logical_and(
+                    indices[:,0]<distances.shape[0],
+                    indices[:,1]<distances.shape[1]))
+            indices = indices[in_bounds,:]
+            if k == 1:
+                errors = distances[indices[:,0],indices[:,1]]
+            else:
+                errors = np.power(distances[indices[:,0],indices[:,1]], k)
+            error = errors.sum()
+            print x, y, theta, error 
+            return error
+
+        res = opt.minimize(error_function,(0,0,0),
+            args=(edge_points, x0, y0, theta0, camview_angle_offset, distances, k),
+            options={"maxiter":maxiter}
+            )
+        print res
+        return res.x
+
+
+
     def update_ins(self,car,dt):
         # print "--"
         # print car.speed
@@ -290,6 +374,27 @@ class App(object):
         # print car.gyro
         car.ins.update_pose(car.x, car.y, (car.theta) * Utils.d2r)
         car.ins.update(car.imu.get_sensor_array(), dt)
+
+        actual_view = self.cars[0].camview.view
+
+        # bw
+        bw = actual_view[:,:,0]
+
+
+        x_corr, y_corr, theta_corr = self.optimize_correction(
+            edge_points = self.zero_points(bw), 
+            distances = self.background.arr_dist, 
+            camview_offset = self.cars[0].camview.offset,
+            camview_angle_offset = self.cars[0].camview.angle_offset,
+            camview_width = self.cars[0].camview.width,
+            x0 = car.ins.get_state("pos_x"),
+            y0 = car.ins.get_state("pos_y"),
+            theta0 = car.ins.get_state("orientation") / Utils.d2r,
+            skip = 4,
+            maxiter = 10
+            )
+
+        print x_corr, y_corr, theta_corr
 
     def spin(self):
         # Loop until the user clicks the close button.
