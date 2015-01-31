@@ -114,7 +114,7 @@ class App(object):
 
 
         # this causes the controller of cars[0] to use the information from cars[0].ghost but act on cars[0]
-        self.cars[0].ghost = self.cars[2]
+        # self.cars[0].ghost = self.cars[2]
 
         # self.window = Window(self.screen, self.events, 300, 200, "caption")
 
@@ -377,9 +377,9 @@ class App(object):
         if skip > 0:
             edge_points = edge_points[::(skip+1),:]
 
-        transformed = np.array(Utils.rotate_points(edge_points,camview_angle_offset + theta0))
-        transformed += (x0,y0)
-        gradients = self.gradients(distances, transformed)
+        # transformed = np.array(Utils.rotate_points(edge_points,camview_angle_offset + theta0))
+        # transformed += (x0,y0)
+        # gradients = self.gradients(distances, transformed)
 
         # print gradients.mean(axis=0)
 
@@ -411,24 +411,51 @@ class App(object):
             # only use errors for transformed points in bounds
             errors = errors[in_bounds]
             
+            # apply power
             if k != 1:
                 errors = np.power(errors, k)
             
+            # mean of errors
             if errors.shape[0] > 0:
                 error = errors.mean()
             else:
                 error = 1e5
 
-            # print x, y, theta, error 
-            return error
+            # get closest point on lane
+            closest_lane_idx = self.lane.closest_sampled_idx(x0+x, y0+y)
 
-        # res = opt.minimize(error_function,(0,0,0),
-        #     args=(edge_points, x0, y0, theta0, camview_angle_offset, distances, k),
-        #     options={
-        #         "maxiter":maxiter,
-        #         "eps":1e-1
-        #         }
-        #     )
+            # reward proximity to lane
+            dist_lane = Utils.distance_between(
+                        (self.lane.sampled_x[closest_lane_idx],self.lane.sampled_y[closest_lane_idx]),
+                        (x0+x, y0+y))
+            error += dist_lane*dist_lane * 20
+
+
+            # regularisation
+            error += 1 * (param**2).sum()
+
+            # calculate xy gradients
+            gradients = self.gradients(distances, transformed)
+
+            # calculate torques
+            torques = np.cross(transformed - [x0+x,y0+y],gradients,axis=1)
+
+            # calculate parameter gradient
+            mean_gradient = gradients.mean(axis=0) * 5
+            mean_torque = torques.mean() * 0.1
+            param_gradient = np.array([mean_gradient[0],mean_gradient[1],mean_torque])
+
+            # print x, y, theta, error 
+            return error, param_gradient
+
+        res = opt.minimize(error_function,(0,0,0),
+            jac=True, # error_function returns gradient along with the error
+            args=(edge_points, x0, y0, theta0, camview_angle_offset, distances, k),
+            options={
+                "maxiter":maxiter,
+                "eps":1e-1
+                }
+            )
         # print transformed [:10]
         # print (transformed - [x0,y0])[:10]
         # print gradients[:10]
@@ -438,20 +465,20 @@ class App(object):
         # print np.array([[4,5], [1,2],[3,9],[4,7]])
         # print np.cross(np.array([[1,2], [4,5],[4,7],[3,9]]),np.array([[4,5], [1,2],[3,9],[4,7]]))
         
-        torques = np.cross(transformed - [x0,y0],gradients,axis=1)
+        # torques = np.cross(transformed - [x0,y0],gradients,axis=1)
         # print torques.mean()
 
-        mean_gradient = gradients.mean(axis=0) * 5
-        mean_torque = torques.mean() * 0.1
-        resX = (mean_gradient[0],mean_gradient[1],mean_torque)
+        # mean_gradient = gradients.mean(axis=0) * 5
+        # mean_torque = torques.mean() * 0.1
+        # resX = (mean_gradient[0],mean_gradient[1],mean_torque)
         # return resX, 1/0.1
-        return resX, (error_function(resX, edge_points, x0, y0, theta0, camview_angle_offset, distances, k) / 50)
-        #,res.fun
+        # return resX, (error_function(resX, edge_points, x0, y0, theta0, camview_angle_offset, distances, k) / 50)
+        return res.x,res.fun
 
     def optimize_correction(self, edge_points, distances, camview_offset, camview_angle_offset, camview_width, x0, y0, theta0, skip = 1, maxiter=10, k=1):
         # correct for cam view flipped coordinates and offset
         if edge_points.shape[0] == 0:
-            return (0,0,0)
+            return (0,0,0),0
         edge_points[:,0] = camview_width - edge_points[:,0]
         edge_points[:,0] -= camview_offset[0]
         edge_points[:,1] -= camview_offset[1]
@@ -515,7 +542,6 @@ class App(object):
         # print car.theta
         # print car.gyro
 
-        car.ins.update(car.imu.get_sensor_array(), dt)
         # car.ins.update_pose(car.x, car.y, (car.theta) * Utils.d2r,gain=0.05)
 
         actual_view = self.cars[0].camview.view
@@ -524,6 +550,7 @@ class App(object):
         bw = actual_view[:,:,0]
 
 
+        # (x_corr, y_corr, theta_corr), error = self.optimize_correction(
         (x_corr, y_corr, theta_corr), error = self.optimize_correction_gradient(
             edge_points = self.zero_points(bw), 
             distances = self.background.arr_dist, 
@@ -534,20 +561,21 @@ class App(object):
             y0 = car.ins.get_state("pos_y"),
             theta0 = car.ins.get_state("orientation") / Utils.d2r,
             skip = 5,
-            maxiter = 1,
+            maxiter = 20,
             k = 2
             )
 
 
-        # print x_corr, y_corr, theta_corr, error
+        print x_corr, y_corr, theta_corr, error
 
         car.ins.update_pose(
-            car.ins.get_state("pos_x")+x_corr, 
-            car.ins.get_state("pos_y")+y_corr, 
-            car.ins.get_state("orientation")+theta_corr*Utils.d2r,
+            x_corr, 
+            y_corr, 
+            theta_corr*Utils.d2r,
             # gain = 1)
-            gain = 1/error if error != 0 else 1)
+            gain = 25*1/error if error != 0 else 1)
 
+        car.ins.update(car.imu.get_sensor_array(), dt)
 
     def spin(self):
         # Loop until the user clicks the close button.

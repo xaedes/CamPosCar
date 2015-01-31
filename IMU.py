@@ -23,18 +23,18 @@ class IMU(object):
         return self.calibration.accel_scale * \
                  Utils.add_noise(
                     self.car.ax_local + self.calibration.accel_x_bias, 
-                    0*self.calibration.accel_x_variance)
+                    self.calibration.accel_x_variance)
 
     def get_odometer_sample(self):
         return Utils.add_noise(
                     self.car.speed, 
-                    0*self.calibration.odometer_variance)
+                    self.calibration.odometer_variance)
 
     def get_gyro_sample(self):
         return self.calibration.gyro_scale * \
                  Utils.add_noise(
                     (self.car.gyro) * Utils.d2r+ self.calibration.gyro_z_bias, 
-                    0*self.calibration.gyro_z_variance)
+                    self.calibration.gyro_z_variance)
 
     def get_mag_sample(self):
         theta_sample = Utils.add_noise(

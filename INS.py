@@ -69,11 +69,11 @@ class INS(object):
         Z[[3,4]] /= self.imuCalibration.mag_scale       
         return Z
 
-    def update_pose(self, pos_x, pos_y, orientation, gain = 0.95):
-        self.vx_integrated.sum = gain*pos_x + (1-gain)*self.vx_integrated.sum
-        self.vy_integrated.sum = gain*pos_y + (1-gain)*self.vy_integrated.sum
+    def update_pose(self, dpos_x, dpos_y, dorientation, gain = 0.95):
+        self.vx_integrated.sum = gain*(self.vx_integrated.sum+dpos_x) + (1-gain)*self.vx_integrated.sum
+        self.vy_integrated.sum = gain*(self.vy_integrated.sum+dpos_y) + (1-gain)*self.vy_integrated.sum
         # self.states['orientation'] = gain*orientation + (1-gain)*self.states['orientation']
-        # self.gyro_integrated.sum = self.states['orientation']
+        self.gyro_integrated.sum = gain*(self.gyro_integrated.sum+dorientation) + (1-gain)*self.gyro_integrated.sum
         # self.orientation_error.update(np.matrix([0]))
         # self.orientation_error.update(np.matrix([0]))
         # self.orientation_error.update(np.matrix([0]))

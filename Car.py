@@ -34,7 +34,7 @@ class Car(object):
         car_id += 1
 
         self.max_steer = max_steer # in degree/s
-        self.actions = np.linspace(-1,1,11)
+        self.actions = np.linspace(-1,1,5)
 
         self.controller = None
         self.pause = False
