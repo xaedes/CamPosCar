@@ -258,10 +258,9 @@ class App(object):
 
         elif self.lane.selected is not None \
            and event.key == pygame.K_DELETE:
-            for car in self.cars:
-                self.lane.remove_support_point(self.lane.selected)
-                self.lane.selected = None
-                self.update_distance_grid()
+            self.lane.remove_support_point(self.lane.selected)
+            self.lane.selected = None
+            self.update_distance_grid()
 
         elif event.key == pygame.K_RETURN:
             self.controller = self.human if self.controller != self.human else self.onestep
