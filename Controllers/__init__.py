@@ -9,3 +9,4 @@ from NodeController import *
 from OneStepLookaheadController import *
 from NStepLookaheadController import *
 from BestFirstController import *
+from DragAndDropController import *
