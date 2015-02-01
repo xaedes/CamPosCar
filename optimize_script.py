@@ -118,7 +118,8 @@ class App(object):
 
 
     def draw(self):
-        self.background.draw(self.screen)
+        # self.background.draw(self.screen)
+        Draw.draw_nparr(self.screen, self.background.arr_dist_rgb)
         self.lane.draw(self.screen)
 
 

@@ -60,3 +60,11 @@ class Draw(object):
 
         pygame.draw.polygon(screen, color, Utils.rotated_rect_points((x,y),angle,w,h), 1)
 
+    @classmethod
+    def draw_nparr(CLS, screen, arr, x=0, y=0):
+        # Reference pixels into a 3d array
+        screen_arr = pygame.surfarray.pixels3d(screen)
+        w,h = arr.shape[:2]
+        x2,y2 = min(screen_arr.shape[0],x+w),min(screen_arr.shape[1],y+h)
+        # blit arr directly into referenced screen pixels
+        screen_arr[x:x2,y:y2,:] = arr
