@@ -36,6 +36,7 @@ class Car(object):
         self.max_steer = max_steer # in degree/s
         self.actions = np.linspace(-1,1,5)
 
+        self.name = None
         self.controller = None
         self.pause = False
 
@@ -164,3 +165,6 @@ class Car(object):
             width = 2 if action == a else 1
             pygame.draw.lines(screen,color,False,action_line,width)
 
+        if self.name is not None:
+            Draw.draw_string(screen,Draw.font,
+                self.name,self.x,self.y,color)
