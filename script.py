@@ -113,6 +113,9 @@ class App(object):
                                         width = 275,height = 275, offset=(0,75), angle_offset = -25)
         self.cars[2].camview.register_events(self.events)
 
+        self.cars[0].name = "actual"
+        self.cars[1].name = "human"
+        self.cars[2].name = "estimate"
 
         # this causes the controller of cars[0] to use the information from cars[0].ghost but act on cars[0]
         # self.cars[0].ghost = self.cars[2]
@@ -145,6 +148,7 @@ class App(object):
         self.screen = pygame.display.set_mode(self.size)
 
         self.font = pygame.font.SysFont("arial",10)
+        Draw.font = self.font
          
         pygame.display.set_caption("My Game")
 
