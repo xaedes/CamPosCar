@@ -17,6 +17,7 @@ class Draw(object):
     GREEN     = (   0, 255,   0)
     RED       = ( 255,   0,   0)
     DARKBLUE  = (   0,   0, 128)
+    GRAY      = ( 128, 128, 128)
     LIGHTGRAY = ( 222, 222, 222)
     # HIGHLIGHT = (   8,   0,  39)
     HIGHLIGHT = ( 247, 255, 216)

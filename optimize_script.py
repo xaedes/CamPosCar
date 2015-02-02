@@ -99,9 +99,13 @@ class App(object):
         self.cars = []
         self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for actual car
         self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate
+        self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate optimization single pass
+        self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate optimization multi pass
 
         for car in self.cars:
             car.color = Draw.WHITE
+        self.cars[2].color = Draw.YELLOW
+        self.cars[3].color = Draw.RED
 
         self.action = None
 
@@ -114,9 +118,24 @@ class App(object):
 
         self.cars[0].name = "actual"
         self.cars[1].name = "estimate"
+        self.cars[2].name = "opt"
+        self.cars[3].name = "opt*"
         self.cars[0].controller = self.controller
         self.cars[1].controller = self.controller
         self.cars[0].camview = CamView(self.cars[0],self.background.arr)
+
+        self.cars[2].controller = OptimizeNearestEdgeXYSinglePass(
+            optimize = self.optimize, 
+            labels = self.labels, 
+            label_positions = self.label_positions, 
+            camview = self.cars[0].camview, 
+            estimate_car = self.cars[1])
+        self.cars[3].controller = OptimizeNearestEdgeXYMultiPass(
+            optimize = self.optimize, 
+            labels = self.labels, 
+            label_positions = self.label_positions, 
+            camview = self.cars[0].camview, 
+            estimate_car = self.cars[1])
 
         # self.window = Window(self.screen, self.events, 300, 200, "caption")
 
@@ -155,12 +174,13 @@ class App(object):
             # bw
             bw = actual_view[:,:,0]
 
-            skip = 10
+            skip = 5
             edge_points = Utils.zero_points(bw)[::skip,:]
 
             transformed = camview.transform_camview_to_car_xy(edge_points,
                 flip_x = True, flip_y = False, flip_xy = False
                 )
+            
             transformed = camview.transform_car_xy_to_global(transformed,
                     angle = self.cars[1].theta + camview.angle_offset,
                     global_x = self.cars[1].x, 
@@ -168,14 +188,35 @@ class App(object):
 
             xx,yy = transformed[:,0], transformed[:,1]
 
-            # show edge on distance transformation of bg
-            tmp = (self.background.arr_dist/self.background.arr_dist.max()).copy()
+            ## show edge on distance transformation of bg
+            # get arr_dist copy scaled to 0..1
+            # tmp = (self.background.arr_dist/self.background.arr_dist.max()).copy()
+            tmp = 1-(self.background.arr_bw/self.background.arr_bw.max()).copy()
+            # select points that in bound of the drawing area
             in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<tmp.shape[0],yy<tmp.shape[1]))
+            # set points that are in bounds to maximum value, i.e. white
             tmp[xx[in_bounds],yy[in_bounds]] = tmp.max()
 
+            # get nearest points on bg edge of all transformed points in bounds
+            nearest_edge = np.array([self.label_positions[label] for label in self.labels[xx[in_bounds],yy[in_bounds]]])
+            # set nearest points to white
+            tmp[nearest_edge[:,0],nearest_edge[:,1]] = tmp.max()
+
+            # show cv2 image in extra window
             # cv2.imshow("tmp",tmp)
 
+            # blit what we draw so far
             Draw.draw_nparr(self.screen, 255*tmp)
+            
+            # draw lines from transformed points to corresponding nearest bg edge point
+            for i in range(nearest_edge.shape[0]):
+                pygame.draw.aaline(self.screen, Draw.GRAY, 
+                    (xx[in_bounds][i],yy[in_bounds][i]),
+                    (nearest_edge[i,0],nearest_edge[i,1]))
+
+            # self.cars[2].x = self.cars[1].x + (nearest_edge[:,0] - xx[in_bounds]).mean()
+            # self.cars[2].y = self.cars[1].y + (nearest_edge[:,1] - yy[in_bounds]).mean()
+            # self.cars[2].theta = self.cars[1].theta
 
         self.lane.draw(self.screen)
 

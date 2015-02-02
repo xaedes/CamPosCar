@@ -7,6 +7,7 @@ from Utils import Utils
 from CamView import CamView
 
 import scipy.optimize as opt
+import math
 
 class Optimize(object):
     """docstring for Optimize"""
@@ -218,3 +219,52 @@ class Optimize(object):
                 }
             )
         return res.x, res.fun
+
+    def correct_xy_nearest_edge_single_pass(self, edge_points_in_car_xy, x0, y0, theta0, labels, label_positions, camview,skip=5):
+        transformed = camview.transform_car_xy_to_global(edge_points_in_car_xy,
+                angle = theta0 + camview.angle_offset,
+                global_x = x0, 
+                global_y = y0)
+
+        xx,yy = transformed[:,0], transformed[:,1]
+        # select points that in bound of labeled area
+        in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<labels.shape[0],yy<labels.shape[1]))
+
+        # get nearest points according to labels and label_positions of all transformed points in bounds
+        nearest_edge = np.array([label_positions[label] for label in labels[xx[in_bounds],yy[in_bounds]]])
+
+        xcorr = (nearest_edge[:,0] - xx[in_bounds]).mean()
+        ycorr = (nearest_edge[:,1] - yy[in_bounds]).mean()
+        return (xcorr, ycorr)
+
+    def correct_xy_nearest_edge_multi_pass(self, edge_points, x0, y0, theta0, labels, label_positions, camview, skip=5, tol=1e1, maxiter=10):
+        car_xy = camview.transform_camview_to_car_xy(edge_points)
+        i = 0
+        xcorr, ycorr = 0,0
+        
+        while True:
+            transformed = camview.transform_car_xy_to_global(car_xy,
+                    angle = theta0 + camview.angle_offset,
+                    global_x = x0+xcorr, 
+                    global_y = y0+ycorr)
+
+            xx,yy = transformed[:,0], transformed[:,1]
+            # select points that in bound of labeled area
+            in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<labels.shape[0],yy<labels.shape[1]))
+
+            # get nearest points according to labels and label_positions of all transformed points in bounds
+            nearest_edge = np.array([label_positions[label] for label in labels[xx[in_bounds],yy[in_bounds]]])
+
+            if nearest_edge.shape[0] > 0:
+                # print "nearest_edge.shape", nearest_edge.shape
+                # print "xx.shape", xx.shape
+                # print "in_bounds.shape", in_bounds.shape
+                # print "xx[in_bounds].shape", xx[in_bounds].shape
+                xcorr += (nearest_edge[:,0] - xx[in_bounds]).mean()
+                ycorr += (nearest_edge[:,1] - yy[in_bounds]).mean()
+
+            i += 1
+            if (i >= maxiter) or (math.sqrt(xcorr*xcorr+ycorr*ycorr) < tol):
+                break
+
+        return (xcorr, ycorr)

@@ -10,3 +10,5 @@ from OneStepLookaheadController import *
 from NStepLookaheadController import *
 from BestFirstController import *
 from DragAndDropController import *
+from OptimizeNearestEdgeXYSinglePass import *
+from OptimizeNearestEdgeXYMultiPass import *

@@ -51,12 +51,31 @@ class App(object):
     """docstring for App"""
     def __init__(self):
         super(App, self).__init__()
-        
+        # load background
         self.background = Background(filename="background.png")
+
+        # get array copy of background image
         self.background.arr = pygame.surfarray.array3d(self.background.img)
+
+        # create bw from image
         _,self.background.arr_bw = cv2.threshold(self.background.arr[:,:,0],128,1,cv2.THRESH_BINARY)
+        
         # print self.background.arr_bw.shape, self.background.arr_bw.dtype
-        self.background.arr_dist = cv2.distanceTransform(self.background.arr_bw, cv.CV_DIST_L1, 3)
+        # self.background.arr_dist = cv2.distanceTransform(self.background.arr_bw, cv.CV_DIST_L1, 3)
+        
+        # get nearest (zero) pixel labels with corresponding distances
+        self.background.arr_dist,self.labels = cv2.distanceTransformWithLabels(self.background.arr_bw, cv.CV_DIST_L1, 3,labelType = cv2.DIST_LABEL_PIXEL)
+
+        ### get x,y coordinates for each label
+        # get positions of zero points
+        zero_points = Utils.zero_points(self.background.arr_bw)
+        # get labels for zero points
+        zero_labels = self.labels[zero_points[:,0],zero_points[:,1]]
+        # create dictionary mapping labels to zero point positions
+        self.label_positions = dict(zip(zero_labels,zip(zero_points[:,0],zero_points[:,1])))
+
+
+        # provide a rgb variant of dist for display
         self.background.arr_dist_rgb = self.background.arr.copy()
         self.background.arr_dist_rgb[:,:,0] = self.background.arr_dist
         self.background.arr_dist_rgb[:,:,1] = self.background.arr_dist
@@ -343,20 +362,31 @@ class App(object):
 
         # bw
         bw = actual_view[:,:,0]
-
-
+        theta_corr = 0
+        (x_corr, y_corr) = self.optimize.correct_xy_nearest_edge_multi_pass(
+            edge_points=Utils.zero_points(bw),
+            x0=car.ins.get_state("pos_x"),
+            y0=car.ins.get_state("pos_y"),
+            theta0=car.ins.get_state("orientation") / Utils.d2r,
+            labels=self.labels,
+            label_positions=self.label_positions,
+            camview=self.cars[0].camview,
+            skip=5,
+            tol=1e1,
+            maxiter=10)
+        error = 10
         # (x_corr, y_corr, theta_corr), error = self.optimize_correction(
-        (x_corr, y_corr, theta_corr), error = self.optimize.optimize_correction(
-            edge_points = Utils.zero_points(bw), 
-            distances = self.background.arr_dist, 
-            camview = self.cars[0].camview,
-            x0 = car.ins.get_state("pos_x"),
-            y0 = car.ins.get_state("pos_y"),
-            theta0 = car.ins.get_state("orientation") / Utils.d2r,
-            skip = 5,
-            maxiter = 5,
-            k = 1
-            )
+        # (x_corr, y_corr, theta_corr), error = self.optimize.optimize_correction(
+        #     edge_points = Utils.zero_points(bw), 
+        #     distances = self.background.arr_dist, 
+        #     camview = self.cars[0].camview,
+        #     x0 = car.ins.get_state("pos_x"),
+        #     y0 = car.ins.get_state("pos_y"),
+        #     theta0 = car.ins.get_state("orientation") / Utils.d2r,
+        #     skip = 5,
+        #     maxiter = 5,
+        #     k = 1
+        #     )
 
 
         print x_corr, y_corr, theta_corr, error
