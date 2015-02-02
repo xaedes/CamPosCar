@@ -34,11 +34,13 @@ class Car(object):
         car_id += 1
 
         self.max_steer = max_steer # in degree/s
-        self.actions = np.linspace(-1,1,5)
+        self.actions = np.linspace(-1,1,11)
 
         self.name = None
         self.controller = None
         self.pause = False
+
+        self.color = Draw.BLACK
 
     def collision_radius(self):
         return self.size * 1.2
@@ -148,12 +150,11 @@ class Car(object):
         return self
 
     def draw(self,screen, action = None):
-        color = Draw.BLACK
         # draw collision area
-        pygame.draw.circle(screen, color, (int(self.x+0.5), int(self.y+0.5)), int(self.collision_radius()+0.5), 1)
+        pygame.draw.circle(screen, self.color, (int(self.x+0.5), int(self.y+0.5)), int(self.collision_radius()+0.5), 1)
 
         # draw car itself
-        Draw.draw_rotated_rect(screen,self.x,self.y,self.size,self.size*0.8,self.theta,color)
+        Draw.draw_rotated_rect(screen,self.x,self.y,self.size,self.size*0.8,self.theta,self.color)
 
         # draw action lines
         action_lines={}
@@ -161,10 +162,9 @@ class Car(object):
         l = self.size * 0.5
         for a in self.actions:
             action_line = Utils.translate_points(Utils.rotate_points([(0,0),(m,-a*l)],self.theta),self.x,self.y)
-            color = color
             width = 2 if action == a else 1
-            pygame.draw.lines(screen,color,False,action_line,width)
+            pygame.draw.lines(screen,self.color,False,action_line,width)
 
         if self.name is not None:
             Draw.draw_string(screen,Draw.font,
-                self.name,self.x,self.y,color)
+                self.name,self.x,self.y,self.color)
