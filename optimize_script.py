@@ -80,6 +80,9 @@ class App(object):
         self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for actual car
         self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate
 
+        for car in self.cars:
+            car.color = Draw.WHITE
+
         self.action = None
 
         self.dragdrop = DragAndDropController(self.events)
@@ -93,6 +96,7 @@ class App(object):
         self.cars[1].name = "estimate"
         self.cars[0].controller = self.controller
         self.cars[1].controller = self.controller
+        self.cars[0].camview = CamView(self.cars[0],self.background.arr)
 
         # self.window = Window(self.screen, self.events, 300, 200, "caption")
 
@@ -118,10 +122,39 @@ class App(object):
 
 
     def draw(self):
-        # self.background.draw(self.screen)
-        Draw.draw_nparr(self.screen, self.background.arr_dist_rgb)
-        self.lane.draw(self.screen)
+        self.background.draw(self.screen)
+        # Draw.draw_nparr(self.screen, self.background.arr_dist_rgb)
+        
+        camview = self.cars[0].camview
+        actual_view = camview.view
 
+        if actual_view is not None:
+
+            # bw
+            bw = actual_view[:,:,0]
+
+            edge_points = self.optimize.zero_points(bw)
+
+            transformed = camview.transform_camview_to_car_xy(edge_points,
+                flip_x = True, flip_y = False, flip_xy = True
+                )
+            transformed = camview.transform_car_xy_to_global(transformed,
+                    angle = self.cars[1].theta + camview.angle_offset,
+                    global_x = self.cars[1].x, 
+                    global_y = self.cars[1].y)
+
+            xx,yy = transformed[:,0], transformed[:,1]
+
+            # show edge on distance transformation of bg
+            tmp = (self.background.arr_dist/self.background.arr_dist.max()).copy()
+            in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<tmp.shape[0],yy<tmp.shape[1]))
+            tmp[xx[in_bounds],yy[in_bounds]] = tmp.max()
+
+            # cv2.imshow("tmp",tmp)
+
+            Draw.draw_nparr(self.screen, 255*tmp)
+
+        self.lane.draw(self.screen)
 
         # Draw car
         for car in self.cars:
