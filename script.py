@@ -100,7 +100,7 @@ class App(object):
         self.cars = []
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
-        self.cars.append(Car(x=50,y=250,theta=90,speed=0.3 * 1.5*90))
+        self.cars.append(Car(x=50,y=250,theta=90,speed=1.5 * 1.5*90))
         self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [1] human
         self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [2] ghost of ins estimating [0]
 
@@ -137,7 +137,7 @@ class App(object):
         self.cars[2].name = "estimate"
 
         # this causes the controller of cars[0] to use the information from cars[0].ghost but act on cars[0]
-        # self.cars[0].ghost = self.cars[2]
+        self.cars[0].ghost = self.cars[2]
 
         # self.window = Window(self.screen, self.events, 300, 200, "caption")
 
@@ -154,7 +154,7 @@ class App(object):
             # toggle speed
             car.speed = car.speed_on - car.speed
 
-            car.pause = not car.pause        
+            # car.pause = not car.pause        
 
         self.register_events()
         self.spin()
@@ -224,7 +224,8 @@ class App(object):
             xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
             # edge = np.array(zip(yy,xx),dtype="int32")
             
-            xx,yy = xx[::5],yy[::5]
+            skip = 20
+            xx,yy = xx[::skip],yy[::skip]
             xx,yy = yy,xx
             if xx.shape[0] > 0:
                 # transform edge positions into car coordinate system, with car position on (0,0) and y-axis pointing to driving direction
@@ -277,7 +278,7 @@ class App(object):
                 # toggle speed
                 car.speed = car.speed_on - car.speed
 
-                car.pause = not car.pause
+                # car.pause = not car.pause
 
         elif self.lane.selected is not None \
            and event.key == pygame.K_DELETE:
@@ -360,43 +361,44 @@ class App(object):
 
         actual_view = self.cars[0].camview.view
 
-        # bw
-        bw = actual_view[:,:,0]
-        theta_corr = 0
-        (x_corr, y_corr) = self.optimize.correct_xy_nearest_edge_multi_pass(
-            edge_points=Utils.zero_points(bw),
-            x0=car.ins.get_state("pos_x"),
-            y0=car.ins.get_state("pos_y"),
-            theta0=car.ins.get_state("orientation") / Utils.d2r,
-            labels=self.labels,
-            label_positions=self.label_positions,
-            camview=self.cars[0].camview,
-            skip=5,
-            tol=1e1,
-            maxiter=10)
-        error = 10
-        # (x_corr, y_corr, theta_corr), error = self.optimize_correction(
-        # (x_corr, y_corr, theta_corr), error = self.optimize.optimize_correction(
-        #     edge_points = Utils.zero_points(bw), 
-        #     distances = self.background.arr_dist, 
-        #     camview = self.cars[0].camview,
-        #     x0 = car.ins.get_state("pos_x"),
-        #     y0 = car.ins.get_state("pos_y"),
-        #     theta0 = car.ins.get_state("orientation") / Utils.d2r,
-        #     skip = 5,
-        #     maxiter = 5,
-        #     k = 1
-        #     )
+        if actual_view is not None:
+            # bw
+            bw = actual_view[:,:,0]
+            theta_corr = 0
+            (x_corr, y_corr) = self.optimize.correct_xy_nearest_edge_multi_pass(
+                edge_points=Utils.zero_points(bw),
+                x0=car.ins.get_state("pos_x"),
+                y0=car.ins.get_state("pos_y"),
+                theta0=car.ins.get_state("orientation") / Utils.d2r,
+                labels=self.labels,
+                label_positions=self.label_positions,
+                camview=self.cars[0].camview,
+                skip=20,
+                tol=1e-1,
+                maxiter=10)
+            error = 00
+            # (x_corr, y_corr, theta_corr), error = self.optimize_correction(
+            # (x_corr, y_corr, theta_corr), error = self.optimize.optimize_correction(
+            #     edge_points = Utils.zero_points(bw), 
+            #     distances = self.background.arr_dist, 
+            #     camview = self.cars[0].camview,
+            #     x0 = car.ins.get_state("pos_x"),
+            #     y0 = car.ins.get_state("pos_y"),
+            #     theta0 = car.ins.get_state("orientation") / Utils.d2r,
+            #     skip = 5,
+            #     maxiter = 5,
+            #     k = 1
+            #     )
 
 
-        print x_corr, y_corr, theta_corr, error
+            print x_corr, y_corr, theta_corr, error
 
-        car.ins.update_pose(
-            x_corr, 
-            y_corr, 
-            theta_corr*Utils.d2r,
-            # gain = 1)
-            gain = 0.5*1/error if error != 0 else 1)
+            car.ins.update_pose(
+                x_corr, 
+                y_corr, 
+                theta_corr*Utils.d2r,
+                # gain = 1)
+                gain = 0.5*1/error if error != 0 else 1)
 
         car.ins.update(car.imu.get_sensor_array(), dt)
 
