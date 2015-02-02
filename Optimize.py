@@ -237,6 +237,55 @@ class Optimize(object):
         ycorr = (nearest_edge[:,1] - yy[in_bounds]).mean()
         return (xcorr, ycorr)
 
+    def distance_mean(self, xytheta, edge_points, x0, y0, theta0, camview, distances, k=1):
+        if edge_points.shape[0] == 0:
+            return None
+        edge_points_in_car_xy = camview.transform_camview_to_car_xy(edge_points)
+        return self.distance_mean_in_car_xy(xytheta, edge_points_in_car_xy, x0, y0, theta0, camview, distances, k)
+
+    def distance_mean_in_car_xy(self, xytheta, edge_points_in_car_xy, x0, y0, theta0, camview, distances, k=1):
+        if edge_points_in_car_xy.shape[0] == 0:
+            return None
+        x, y, theta = xytheta
+        transformed = camview.transform_car_xy_to_global(edge_points_in_car_xy,
+            camview.angle_offset + theta0 + theta,
+            x0+x,y0+y)
+        indices = np.round(transformed).astype("int32")
+        errors = np.zeros(shape=(transformed.shape[0]),dtype="float32")
+
+        in_bounds = np.logical_and(
+            np.logical_and(
+                indices[:,0]>=0,
+                indices[:,1]>=0),
+            np.logical_and(
+                indices[:,0]<distances.shape[0]-1,
+                indices[:,1]<distances.shape[1]-1))
+
+        # get distances for transformed points in bounds 
+        errors[in_bounds] = distances[indices[in_bounds,0],indices[in_bounds,1]]
+
+        # add subpixel interpolation
+        dx = distances[indices[in_bounds,0]+1,indices[in_bounds,1]] - distances[indices[in_bounds,0],indices[in_bounds,1]]
+        dy = distances[indices[in_bounds,0],indices[in_bounds,1]+1] - distances[indices[in_bounds,0],indices[in_bounds,1]]
+        ds = transformed - indices
+        errors[in_bounds] += dx * ds[in_bounds,0] + dy * ds[in_bounds,1]
+        
+        # only use errors for transformed points in bounds
+        errors = errors[in_bounds]
+        
+        if k != 1:
+            errors = np.power(errors, k)
+        
+        if errors.shape[0] > 0:
+            error = errors.mean()
+        else:
+            error = None
+
+        # print x, y, theta, error 
+        return error
+
+
+
     def correct_xy_nearest_edge_multi_pass(self, edge_points, x0, y0, theta0, labels, label_positions, camview, skip=5, tol=1e1, maxiter=10):
         if edge_points.shape[0] == 0:
             return (0,0)

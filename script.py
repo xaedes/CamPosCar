@@ -100,7 +100,7 @@ class App(object):
         self.cars = []
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
-        self.cars.append(Car(x=50,y=250,theta=90,speed=1.5 * 1.5*90))
+        self.cars.append(Car(x=50,y=250,theta=90,speed=4 * 1.5*90))
         self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [1] human
         self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [2] ghost of ins estimating [0]
 
@@ -185,74 +185,74 @@ class App(object):
         # self.camview.draw(self.screen)
 
         # blende tatsächlichen view in view von ins estimated ein
-        actual_view = self.cars[0].camview.view
-        ins_view = self.cars[2].camview.view
-        if actual_view is not None and ins_view is not None:
-            actual_view = actual_view.copy()
-            ins_view = ins_view.copy()
+        # actual_view = self.cars[0].camview.view
+        # ins_view = self.cars[2].camview.view
+        # if actual_view is not None and ins_view is not None:
+        #     actual_view = actual_view.copy()
+        #     ins_view = ins_view.copy()
 
-            # horizontal center alignment of  actual view and ins view
-            low_x = math.floor(actual_view.shape[0] / 2)
-            hgh_x = low_x + math.ceil((actual_view.shape[0] / 2) - low_x)
-            x1 = self.cars[2].camview.offset[0]+math.floor(ins_view.shape[0]/2)-low_x
-            x2 = self.cars[2].camview.offset[0]+math.floor(ins_view.shape[0]/2)+hgh_x
+        #     # horizontal center alignment of  actual view and ins view
+        #     low_x = math.floor(actual_view.shape[0] / 2)
+        #     hgh_x = low_x + math.ceil((actual_view.shape[0] / 2) - low_x)
+        #     x1 = self.cars[2].camview.offset[0]+math.floor(ins_view.shape[0]/2)-low_x
+        #     x2 = self.cars[2].camview.offset[0]+math.floor(ins_view.shape[0]/2)+hgh_x
 
-            # vertical placement
-            y1 = math.floor(self.cars[2].camview.offset[1])
-            y2 = math.floor(self.cars[2].camview.offset[1])+actual_view.shape[1]
+        #     # vertical placement
+        #     y1 = math.floor(self.cars[2].camview.offset[1])
+        #     y2 = math.floor(self.cars[2].camview.offset[1])+actual_view.shape[1]
 
-            # draw edges of actual_view with white in ins_view
-            np.maximum(                  # only draw if brighter
-                255-actual_view[:,:,:],  #
-                ins_view[y1:y2,x1:x2,:], # 
-                ins_view[y1:y2,x1:x2,:]) # dst, in-place
+        #     # draw edges of actual_view with white in ins_view
+        #     np.maximum(                  # only draw if brighter
+        #         255-actual_view[:,:,:],  #
+        #         ins_view[y1:y2,x1:x2,:], # 
+        #         ins_view[y1:y2,x1:x2,:]) # dst, in-place
             
-            # draw edges of actual_view with black in ins_view
-            # np.minimum(                  # only draw if darker
-            #     actual_view[:,:,:],
-            #     ins_view[y1:y2,x1:x2,:],
-            #     ins_view[y1:y2,x1:x2,:]) # dst, in-place
+        #     # draw edges of actual_view with black in ins_view
+        #     # np.minimum(                  # only draw if darker
+        #     #     actual_view[:,:,:],
+        #     #     ins_view[y1:y2,x1:x2,:],
+        #     #     ins_view[y1:y2,x1:x2,:]) # dst, in-place
             
-            # show image
-            cv2.imshow("0 in 2",ins_view)
+        #     # show image
+        #     cv2.imshow("0 in 2",ins_view)
 
-        #     # # bw
-            bw = actual_view[:,:,0]
+        # #     # # bw
+        #     bw = actual_view[:,:,0]
 
-            # extract edge pixel positions from actual_view
-            xx,yy = np.meshgrid(*map(np.arange,bw.shape))
-            xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
-            # edge = np.array(zip(yy,xx),dtype="int32")
+        #     # extract edge pixel positions from actual_view
+        #     xx,yy = np.meshgrid(*map(np.arange,bw.shape))
+        #     xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
+        #     # edge = np.array(zip(yy,xx),dtype="int32")
             
-            skip = 20
-            xx,yy = xx[::skip],yy[::skip]
-            xx,yy = yy,xx
-            if xx.shape[0] > 0:
-                # transform edge positions into car coordinate system, with car position on (0,0) and y-axis pointing to driving direction
-                # reverses camview offset and angle offset
-                # yy -= self.cars[0].camview.offset[0]
-                xx = self.cars[0].camview.width - (xx)
-                xx -= self.cars[0].camview.offset[0] 
-                yy -= self.cars[0].camview.offset[1] 
-                # a second rotation to account for the car theta can be integrated into the camview.angle_offset rotation
-                xxyy = np.array(Utils.rotate_points(zip(xx,yy),self.cars[0].camview.angle_offset + self.cars[2].theta))
-                xx = xxyy[:,0]
-                yy = xxyy[:,1]
-                # add car offset
-                xx += self.cars[2].x
-                yy += self.cars[2].y
+        #     skip = 20
+        #     xx,yy = xx[::skip],yy[::skip]
+        #     xx,yy = yy,xx
+        #     if xx.shape[0] > 0:
+        #         # transform edge positions into car coordinate system, with car position on (0,0) and y-axis pointing to driving direction
+        #         # reverses camview offset and angle offset
+        #         # yy -= self.cars[0].camview.offset[0]
+        #         xx = self.cars[0].camview.width - (xx)
+        #         xx -= self.cars[0].camview.offset[0] 
+        #         yy -= self.cars[0].camview.offset[1] 
+        #         # a second rotation to account for the car theta can be integrated into the camview.angle_offset rotation
+        #         xxyy = np.array(Utils.rotate_points(zip(xx,yy),self.cars[0].camview.angle_offset + self.cars[2].theta))
+        #         xx = xxyy[:,0]
+        #         yy = xxyy[:,1]
+        #         # add car offset
+        #         xx += self.cars[2].x
+        #         yy += self.cars[2].y
 
-                # to use as index
-                xx = np.round(xx).astype("int32")
-                yy = np.round(yy).astype("int32")
+        #         # to use as index
+        #         xx = np.round(xx).astype("int32")
+        #         yy = np.round(yy).astype("int32")
 
-            # transform edge positions into global card using ins estimate
+        #     # transform edge positions into global card using ins estimate
 
-            # show edge on distance transformation of bg
-            tmp = (self.background.arr_dist/self.background.arr_dist.max()).copy()
-            in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<tmp.shape[0],yy<tmp.shape[1]))
-            tmp[xx[in_bounds],yy[in_bounds]] = tmp.max()
-            cv2.imshow("tmp",tmp)
+        #     # show edge on distance transformation of bg
+        #     tmp = (self.background.arr_dist/self.background.arr_dist.max()).copy()
+        #     in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<tmp.shape[0],yy<tmp.shape[1]))
+        #     tmp[xx[in_bounds],yy[in_bounds]] = tmp.max()
+        #     cv2.imshow("tmp",tmp)
 
         # # show distance transformation of bg
         # cv2.imshow("bg dist",self.background.arr_dist/self.background.arr_dist.max())
@@ -364,19 +364,33 @@ class App(object):
         if actual_view is not None:
             # bw
             bw = actual_view[:,:,0]
+            edge_points = Utils.zero_points(bw)
             theta_corr = 0
             (x_corr, y_corr) = self.optimize.correct_xy_nearest_edge_multi_pass(
-                edge_points=Utils.zero_points(bw),
-                x0=car.ins.get_state("pos_x"),
-                y0=car.ins.get_state("pos_y"),
-                theta0=car.ins.get_state("orientation") / Utils.d2r,
-                labels=self.labels,
-                label_positions=self.label_positions,
-                camview=self.cars[0].camview,
-                skip=20,
-                tol=1e-1,
-                maxiter=10)
-            error = 00
+                edge_points = edge_points,
+                x0 = car.ins.get_state("pos_x"),
+                y0 = car.ins.get_state("pos_y"),
+                theta0 = car.ins.get_state("orientation") / Utils.d2r,
+                labels = self.labels,
+                label_positions = self.label_positions,
+                camview = self.cars[0].camview,
+                skip = 20,
+                tol = 1e-1,
+                maxiter = 10)
+            error = self.optimize.distance_mean(
+                xytheta = (x_corr, y_corr, 0),
+                edge_points = edge_points,
+                x0 = car.ins.get_state("pos_x"),
+                y0 = car.ins.get_state("pos_y"),
+                theta0 = car.ins.get_state("orientation") / Utils.d2r,
+                camview = self.cars[0].camview,
+                distances = self.background.arr_dist
+                )
+
+            if error is None:
+                x_corr, y_corr, theta_corr, error = 0,0,0,0
+            else:
+                error += 0.001 * (np.array([x_corr, y_corr, theta_corr])**2).sum()
             # (x_corr, y_corr, theta_corr), error = self.optimize_correction(
             # (x_corr, y_corr, theta_corr), error = self.optimize.optimize_correction(
             #     edge_points = Utils.zero_points(bw), 
@@ -398,7 +412,7 @@ class App(object):
                 y_corr, 
                 theta_corr*Utils.d2r,
                 # gain = 1)
-                gain = 0.5*1/error if error != 0 else 1)
+                gain = min(1,2.5*1/error if error != 0 else 1))
 
         car.ins.update(car.imu.get_sensor_array(), dt)
 

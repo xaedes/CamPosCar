@@ -51,8 +51,8 @@ class CamView(object):
 
         view = self.subimage(self.img, pos, theta , self.width, self.height)
         self.view = view
-        cv2.imshow("car " + str(self.car.id),view)
-        cv2.waitKey(1)
+        # cv2.imshow("car " + str(self.car.id),view)
+        # cv2.waitKey(1)
 
         Draw.draw_rotated_rect(screen,pos[0],pos[1],self.width,self.height,theta,Draw.RED)
             
