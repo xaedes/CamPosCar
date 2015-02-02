@@ -133,7 +133,8 @@ class App(object):
             # bw
             bw = actual_view[:,:,0]
 
-            edge_points = self.optimize.zero_points(bw)
+            skip = 10
+            edge_points = self.optimize.zero_points(bw)[::skip,:]
 
             transformed = camview.transform_camview_to_car_xy(edge_points,
                 flip_x = True, flip_y = False, flip_xy = True
