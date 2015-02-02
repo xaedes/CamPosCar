@@ -81,9 +81,9 @@ class App(object):
         self.cars = []
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
-        self.cars.append(Car(x=250,y=100,theta=-45,speed=1 * 1.5*90))
-        self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [1] human
-        self.cars.append(Car(x=250,y=200,theta=-45,speed=1*90)) # [2] ghost of ins estimating [0]
+        self.cars.append(Car(x=50,y=250,theta=90,speed=0.3 * 1.5*90))
+        self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [1] human
+        self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [2] ghost of ins estimating [0]
 
         self.action = None
         self.human = HumanController()
@@ -198,41 +198,41 @@ class App(object):
             cv2.imshow("0 in 2",ins_view)
 
         #     # # bw
-        #     # bw = actual_view[:,:,0]
+            bw = actual_view[:,:,0]
 
-        #     # # extract edge pixel positions from actual_view
-        #     # xx,yy = np.meshgrid(*map(np.arange,bw.shape))
-        #     # xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
-        #     # # edge = np.array(zip(yy,xx),dtype="int32")
+            # extract edge pixel positions from actual_view
+            xx,yy = np.meshgrid(*map(np.arange,bw.shape))
+            xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
+            # edge = np.array(zip(yy,xx),dtype="int32")
             
-        #     # xx,yy = xx[::5],yy[::5]
-        #     # xx,yy = yy,xx
-        #     # if xx.shape[0] > 0:
-        #     #     # transform edge positions into car coordinate system, with car position on (0,0) and y-axis pointing to driving direction
-        #     #     # reverses camview offset and angle offset
-        #     #     # yy -= self.cars[0].camview.offset[0]
-        #     #     xx = self.cars[0].camview.width - (xx)
-        #     #     xx -= self.cars[0].camview.offset[0] 
-        #     #     yy -= self.cars[0].camview.offset[1] 
-        #     #     # a second rotation to account for the car theta can be integrated into the camview.angle_offset rotation
-        #     #     xxyy = np.array(Utils.rotate_points(zip(xx,yy),self.cars[0].camview.angle_offset + self.cars[2].theta))
-        #     #     xx = xxyy[:,0]
-        #     #     yy = xxyy[:,1]
-        #     #     # add car offset
-        #     #     xx += self.cars[2].x
-        #     #     yy += self.cars[2].y
+            xx,yy = xx[::5],yy[::5]
+            xx,yy = yy,xx
+            if xx.shape[0] > 0:
+                # transform edge positions into car coordinate system, with car position on (0,0) and y-axis pointing to driving direction
+                # reverses camview offset and angle offset
+                # yy -= self.cars[0].camview.offset[0]
+                xx = self.cars[0].camview.width - (xx)
+                xx -= self.cars[0].camview.offset[0] 
+                yy -= self.cars[0].camview.offset[1] 
+                # a second rotation to account for the car theta can be integrated into the camview.angle_offset rotation
+                xxyy = np.array(Utils.rotate_points(zip(xx,yy),self.cars[0].camview.angle_offset + self.cars[2].theta))
+                xx = xxyy[:,0]
+                yy = xxyy[:,1]
+                # add car offset
+                xx += self.cars[2].x
+                yy += self.cars[2].y
 
-        #     #     # to use as index
-        #     #     xx = np.round(xx).astype("int32")
-        #     #     yy = np.round(yy).astype("int32")
+                # to use as index
+                xx = np.round(xx).astype("int32")
+                yy = np.round(yy).astype("int32")
 
-        #     # # transform edge positions into global card using ins estimate
+            # transform edge positions into global card using ins estimate
 
-        #     # # show edge on distance transformation of bg
-        #     # tmp = (self.background.arr_dist/self.background.arr_dist.max()).copy()
-        #     # in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<tmp.shape[0],yy<tmp.shape[1]))
-        #     # tmp[xx[in_bounds],yy[in_bounds]] = tmp.max()
-        #     # cv2.imshow("tmp",tmp)
+            # show edge on distance transformation of bg
+            tmp = (self.background.arr_dist/self.background.arr_dist.max()).copy()
+            in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<tmp.shape[0],yy<tmp.shape[1]))
+            tmp[xx[in_bounds],yy[in_bounds]] = tmp.max()
+            cv2.imshow("tmp",tmp)
 
         # # show distance transformation of bg
         # cv2.imshow("bg dist",self.background.arr_dist/self.background.arr_dist.max())
@@ -346,18 +346,16 @@ class App(object):
 
 
         # (x_corr, y_corr, theta_corr), error = self.optimize_correction(
-        (x_corr, y_corr, theta_corr), error = self.optimize.optimize_correction_gradient(
+        (x_corr, y_corr, theta_corr), error = self.optimize.optimize_correction(
             edge_points = self.optimize.zero_points(bw), 
             distances = self.background.arr_dist, 
-            camview_offset = self.cars[0].camview.offset,
-            camview_angle_offset = self.cars[0].camview.angle_offset,
-            camview_width = self.cars[0].camview.width,
+            camview = self.cars[0].camview,
             x0 = car.ins.get_state("pos_x"),
             y0 = car.ins.get_state("pos_y"),
             theta0 = car.ins.get_state("orientation") / Utils.d2r,
             skip = 5,
-            maxiter = 20,
-            k = 2
+            maxiter = 5,
+            k = 1
             )
 
 
@@ -368,7 +366,7 @@ class App(object):
             y_corr, 
             theta_corr*Utils.d2r,
             # gain = 1)
-            gain = 25*1/error if error != 0 else 1)
+            gain = 0.5*1/error if error != 0 else 1)
 
         car.ins.update(car.imu.get_sensor_array(), dt)
 

@@ -72,10 +72,10 @@ class Optimize(object):
         # print gradients.mean(axis=0)
 
         # edge_points must be corrected for cam view flipped coordinates and offset, not for angle_offset!
-        def error_function(param, edge_points, x0, y0, theta0, camview_angle_offset, distances, k=1):
+        def error_function(param, edge_points, x0, y0, theta0, camview, distances, k=1):
             x, y, theta = param
-            transformed = self.transform_car_xy_to_global(edge_points,
-                camview_angle_offset + theta0 + theta,
+            transformed = camview.transform_car_xy_to_global(edge_points,
+                camview.angle_offset + theta0 + theta,
                 x0+x,y0+y)
             indices = np.round(transformed).astype("int32")
             errors = np.zeros(shape=(transformed.shape[0]),dtype="float32")
@@ -139,7 +139,7 @@ class Optimize(object):
 
         res = opt.minimize(error_function,(0,0,0),
             jac=True, # error_function returns gradient along with the error
-            args=(edge_points, x0, y0, theta0, camview_angle_offset, distances, k),
+            args=(edge_points, x0, y0, theta0, camview, distances, k),
             options={
                 "maxiter":maxiter,
                 "eps":1e-1
@@ -175,10 +175,10 @@ class Optimize(object):
             edge_points = edge_points[::(skip+1),:]
 
         # edge_points must be corrected for cam view flipped coordinates and offset, not for angle_offset!
-        def error_function(param, edge_points, x0, y0, theta0, camview_angle_offset, distances, k=1):
+        def error_function(param, edge_points, x0, y0, theta0, camview, distances, k=1):
             x, y, theta = param
-            transformed = self.transform_car_xy_to_global(edge_points,
-                camview_angle_offset + theta0 + theta,
+            transformed = camview.transform_car_xy_to_global(edge_points,
+                camview.angle_offset + theta0 + theta,
                 x0+x,y0+y)
             indices = np.round(transformed).astype("int32")
             errors = np.zeros(shape=(transformed.shape[0]),dtype="float32")
@@ -215,7 +215,7 @@ class Optimize(object):
             return error
 
         res = opt.minimize(error_function,(0,0,0),
-            args=(edge_points, x0, y0, theta0, camview_angle_offset, distances, k),
+            args=(edge_points, x0, y0, theta0, camview, distances, k),
             options={
                 "maxiter":maxiter,
                 "eps":1e-1
