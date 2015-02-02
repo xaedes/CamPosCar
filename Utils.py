@@ -73,3 +73,9 @@ class Utils(object):
     @classmethod
     def add_noise(CLS, value, variance):
         return value + (np.random.normal(0,math.sqrt(variance)) if variance > 0 else 0)
+
+    @classmethod
+    def zero_points(CLS, bw):
+        yy,xx = np.meshgrid(*map(np.arange,reversed(bw.shape)))
+        xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
+        return np.array(zip(xx,yy))

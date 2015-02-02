@@ -13,10 +13,6 @@ class Optimize(object):
     def __init__(self,lane):
         self.lane = lane
 
-    def zero_points(self, bw):
-        xx,yy = np.meshgrid(*map(np.arange,bw.shape))
-        xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
-        return np.array(zip(xx,yy))
 
     def gradients(self, distances, positions):
         indices = np.round(positions).astype("int32")

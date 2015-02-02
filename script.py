@@ -347,7 +347,7 @@ class App(object):
 
         # (x_corr, y_corr, theta_corr), error = self.optimize_correction(
         (x_corr, y_corr, theta_corr), error = self.optimize.optimize_correction(
-            edge_points = self.optimize.zero_points(bw), 
+            edge_points = Utils.zero_points(bw), 
             distances = self.background.arr_dist, 
             camview = self.cars[0].camview,
             x0 = car.ins.get_state("pos_x"),

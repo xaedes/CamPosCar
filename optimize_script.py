@@ -49,12 +49,31 @@ class App(object):
     """docstring for App"""
     def __init__(self):
         super(App, self).__init__()
-        
+        # load background
         self.background = Background(filename="background.png")
+
+        # get array copy of background image
         self.background.arr = pygame.surfarray.array3d(self.background.img)
+
+        # create bw from image
         _,self.background.arr_bw = cv2.threshold(self.background.arr[:,:,0],128,1,cv2.THRESH_BINARY)
+        
         # print self.background.arr_bw.shape, self.background.arr_bw.dtype
-        self.background.arr_dist = cv2.distanceTransform(self.background.arr_bw, cv.CV_DIST_L1, 3)
+        # self.background.arr_dist = cv2.distanceTransform(self.background.arr_bw, cv.CV_DIST_L1, 3)
+        
+        # get nearest (zero) pixel labels with corresponding distances
+        self.background.arr_dist,self.labels = cv2.distanceTransformWithLabels(self.background.arr_bw, cv.CV_DIST_L1, 3,labelType = cv2.DIST_LABEL_PIXEL)
+
+        ### get x,y coordinates for each label
+        # get positions of zero points
+        zero_points = Utils.zero_points(self.background.arr_bw)
+        # get labels for zero points
+        zero_labels = self.labels[zero_points[:,0],zero_points[:,1]]
+        # create dictionary mapping labels to zero point positions
+        self.label_positions = dict(zip(zero_labels,zip(zero_points[:,0],zero_points[:,1])))
+
+
+        # provide a rgb variant of dist for display
         self.background.arr_dist_rgb = self.background.arr.copy()
         self.background.arr_dist_rgb[:,:,0] = self.background.arr_dist
         self.background.arr_dist_rgb[:,:,1] = self.background.arr_dist
@@ -62,6 +81,7 @@ class App(object):
         # print a.shape
 
         self.setup_pygame()
+        self.background.arr_dist = cv2.distanceTransform(self.background.arr_bw, cv.CV_DIST_L1, 3)
 
         self.events = Events()
 
@@ -102,6 +122,8 @@ class App(object):
 
         self.done = False
 
+        self.cursor = (0,0)
+
         self.register_events()
         self.spin()
 
@@ -134,10 +156,10 @@ class App(object):
             bw = actual_view[:,:,0]
 
             skip = 10
-            edge_points = self.optimize.zero_points(bw)[::skip,:]
+            edge_points = Utils.zero_points(bw)[::skip,:]
 
             transformed = camview.transform_camview_to_car_xy(edge_points,
-                flip_x = True, flip_y = False, flip_xy = True
+                flip_x = True, flip_y = False, flip_xy = False
                 )
             transformed = camview.transform_car_xy_to_global(transformed,
                     angle = self.cars[1].theta + camview.angle_offset,
@@ -156,6 +178,13 @@ class App(object):
             Draw.draw_nparr(self.screen, 255*tmp)
 
         self.lane.draw(self.screen)
+
+        # draw cursor position
+        pygame.draw.circle(self.screen, Draw.WHITE, (self.cursor[0], self.cursor[1]), 2, 1)
+        label = self.labels[self.cursor[0],self.cursor[1]]
+        x,y = self.label_positions[label]
+        pygame.draw.circle(self.screen, Draw.WHITE, (int(x+0.5),int(y+0.5)), 2, 1)
+        # print self.label_positions[label]
 
         # Draw car
         for car in self.cars:
@@ -180,6 +209,9 @@ class App(object):
         elif event.key == pygame.K_RETURN:
             self.controller = self.human if self.controller != self.human else self.onestep
 
+    def on_mousemotion(self, event):
+        self.cursor = event.pos
+
     def input(self):
         # get mouse info
         cursor = pygame.mouse.get_pos()
@@ -189,6 +221,7 @@ class App(object):
         self.events.register_callback("quit", self.on_quit)
         self.events.register_callback("laneupdate", self.on_laneupdate)
         self.events.register_callback("keyup", self.on_keyup)
+        self.events.register_callback("mousemotion", self.on_mousemotion)
 
     def on_quit(self, args):
         self.done = True
