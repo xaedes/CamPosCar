@@ -75,7 +75,7 @@ class CamView(object):
             self.xy = event.pos
             
 
-    def subimage(self,image, center, theta, width, height):
+    def subimage(self, image, center, theta, width, height):
         # see rotatedrect.png
 
         theta *= Utils.d2r # convert to rad
@@ -90,3 +90,20 @@ class CamView(object):
 
         return cv2.warpAffine(image,mapping,(width, height),flags=cv2.WARP_INVERSE_MAP,borderMode=cv2.BORDER_REPLICATE)
 
+    def transform_camview_to_car_xy(self, points, flip_x = True, flip_y = False, flip_xy = False):
+        transformed = points.copy()
+        if flip_xy:
+            transformed[:,0] = points[:,1]
+            transformed[:,1] = points[:,0]
+        if flip_x:
+            transformed[:,0] = self.width - transformed[:,0]
+        if flip_y:
+            transformed[:,1] = self.height - transformed[:,1]
+        transformed[:,0] -= self.offset[0]
+        transformed[:,1] -= self.offset[1]
+        return transformed
+
+    def transform_car_xy_to_global(self, points, angle, global_x, global_y):
+        transformed = np.array(Utils.rotate_points(points,angle))
+        transformed += (global_x,global_y)
+        return transformed

@@ -4,6 +4,7 @@ from __future__ import division    # Standardmäßig float division - Ganzzahldi
 import numpy as np                 # Numpy, das Number One Number Crunching Tool
 
 from Utils import Utils
+from CamView import CamView
 
 import scipy.optimize as opt
 
@@ -54,13 +55,12 @@ class Optimize(object):
         return gradients
 
 
-    def optimize_correction_gradient(self, edge_points, distances, camview_offset, camview_angle_offset, camview_width, x0, y0, theta0, skip = 1, maxiter=10, k=1):
+    def optimize_correction_gradient(self, edge_points, distances, camview, x0, y0, theta0, skip = 1, maxiter=10, k=1):
         # correct for cam view flipped coordinates and offset
         if edge_points.shape[0] == 0:
             return (0,0,0),0
-        edge_points[:,0] = camview_width - edge_points[:,0]
-        edge_points[:,0] -= camview_offset[0]
-        edge_points[:,1] -= camview_offset[1]
+        # correct for cam view flipped coordinates and offset
+        edge_points = camview.transform_camview_to_car_xy(edge_points)
 
         if skip > 0:
             edge_points = edge_points[::(skip+1),:]
@@ -74,8 +74,9 @@ class Optimize(object):
         # edge_points must be corrected for cam view flipped coordinates and offset, not for angle_offset!
         def error_function(param, edge_points, x0, y0, theta0, camview_angle_offset, distances, k=1):
             x, y, theta = param
-            transformed = np.array(Utils.rotate_points(edge_points,camview_angle_offset + theta0 + theta))
-            transformed += (x0+x,y0+y)
+            transformed = self.transform_car_xy_to_global(edge_points,
+                camview_angle_offset + theta0 + theta,
+                x0+x,y0+y)
             indices = np.round(transformed).astype("int32")
             errors = np.zeros(shape=(transformed.shape[0]),dtype="float32")
 
@@ -129,8 +130,8 @@ class Optimize(object):
             torques = np.cross(transformed - [x0+x,y0+y],gradients,axis=1)
 
             # calculate parameter gradient
-            mean_gradient = gradients.mean(axis=0) * 5
-            mean_torque = torques.mean() * 0.1
+            mean_gradient = gradients.mean(axis=0) * 15
+            mean_torque = -torques.mean() * 10.1
             param_gradient = np.array([mean_gradient[0],mean_gradient[1],mean_torque])
 
             # print x, y, theta, error 
@@ -163,13 +164,12 @@ class Optimize(object):
         # return resX, (error_function(resX, edge_points, x0, y0, theta0, camview_angle_offset, distances, k) / 50)
         return res.x,res.fun
 
-    def optimize_correction(self, edge_points, distances, camview_offset, camview_angle_offset, camview_width, x0, y0, theta0, skip = 1, maxiter=10, k=1):
-        # correct for cam view flipped coordinates and offset
+
+    def optimize_correction(self, edge_points, distances, camview, x0, y0, theta0, skip = 1, maxiter=10, k=1):
         if edge_points.shape[0] == 0:
             return (0,0,0),0
-        edge_points[:,0] = camview_width - edge_points[:,0]
-        edge_points[:,0] -= camview_offset[0]
-        edge_points[:,1] -= camview_offset[1]
+        # correct for cam view flipped coordinates and offset
+        edge_points = camview.transform_camview_to_car_xy(edge_points)
 
         if skip > 0:
             edge_points = edge_points[::(skip+1),:]
@@ -177,8 +177,9 @@ class Optimize(object):
         # edge_points must be corrected for cam view flipped coordinates and offset, not for angle_offset!
         def error_function(param, edge_points, x0, y0, theta0, camview_angle_offset, distances, k=1):
             x, y, theta = param
-            transformed = np.array(Utils.rotate_points(edge_points,camview_angle_offset + theta0 + theta))
-            transformed += (x0+x,y0+y)
+            transformed = self.transform_car_xy_to_global(edge_points,
+                camview_angle_offset + theta0 + theta,
+                x0+x,y0+y)
             indices = np.round(transformed).astype("int32")
             errors = np.zeros(shape=(transformed.shape[0]),dtype="float32")
 
