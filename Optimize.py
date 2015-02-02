@@ -238,6 +238,8 @@ class Optimize(object):
         return (xcorr, ycorr)
 
     def correct_xy_nearest_edge_multi_pass(self, edge_points, x0, y0, theta0, labels, label_positions, camview, skip=5, tol=1e1, maxiter=10):
+        if edge_points.shape[0] == 0:
+            return (0,0)
         car_xy = camview.transform_camview_to_car_xy(edge_points)
         i = 0
         xcorr, ycorr = 0,0
