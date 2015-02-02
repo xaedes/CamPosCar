@@ -67,4 +67,9 @@ class Draw(object):
         w,h = arr.shape[:2]
         x2,y2 = min(screen_arr.shape[0],x+w),min(screen_arr.shape[1],y+h)
         # blit arr directly into referenced screen pixels
-        screen_arr[x:x2,y:y2,:] = arr
+        if len(arr.shape) == 2:
+            screen_arr[x:x2,y:y2,0] = arr
+            screen_arr[x:x2,y:y2,1] = arr
+            screen_arr[x:x2,y:y2,2] = arr
+        else:
+            screen_arr[x:x2,y:y2,:] = arr
