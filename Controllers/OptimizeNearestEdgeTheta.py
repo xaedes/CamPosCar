@@ -27,11 +27,9 @@ class OptimizeNearestEdgeTheta(Controller):
             # correct estimate 
             thetacorr = self.optimize.correct_theta_nearest_edge(
                 edge_points,
-                x0 = self.estimate_car.x,
-                y0 = self.estimate_car.y,
+                x = self.estimate_car.x,
+                y = self.estimate_car.y,
                 theta0 = self.estimate_car.theta,
-                xcorr = 0,
-                ycorr = 0,
                 labels = self.labels,
                 label_positions = self.label_positions, 
                 hilbert = self.hilbert,

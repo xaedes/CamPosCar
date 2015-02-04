@@ -78,8 +78,6 @@ class App(object):
         # create hilbert curve lookup table
         self.hilbert = Hilbert.hilbert_lookup(*self.background.arr.shape[:2])
 
-        print self.hilbert
-
         # provide a rgb variant of dist for display
         self.background.arr_dist_rgb = self.background.arr.copy()
         self.background.arr_dist_rgb[:,:,0] = self.background.arr_dist
@@ -105,7 +103,7 @@ class App(object):
         self.cars = []
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
-        self.cars.append(Car(x=50,y=250,theta=90,speed=4 * 1.5*90))
+        self.cars.append(Car(x=50,y=250,theta=90,speed=1 * 1.5*90))
         self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [1] human
         self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [2] ghost of ins estimating [0]
 
@@ -382,6 +380,18 @@ class App(object):
                 skip = 20,
                 tol = 1e-1,
                 maxiter = 1)
+            theta_corr = self.optimize.correct_theta_nearest_edge(
+                edge_points = edge_points,
+                x = car.ins.get_state("pos_x") + x_corr,
+                y = car.ins.get_state("pos_y") + y_corr,
+                theta0 = car.ins.get_state("orientation") / Utils.d2r,
+                labels = self.labels,
+                label_positions = self.label_positions, 
+                hilbert = self.hilbert,
+                camview = self.cars[0].camview, 
+                skip = 20,
+                cutoff = 20
+                )
             error = self.optimize.distance_mean(
                 xytheta = (x_corr, y_corr, 0),
                 edge_points = edge_points,

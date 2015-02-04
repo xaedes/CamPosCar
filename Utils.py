@@ -83,17 +83,24 @@ class Utils(object):
     @classmethod
     def principal_axis_of_points(CLS, points):
         cov = np.cov(points[:,0],points[:,1])
-        if np.isnan(cov).any(): # http://stackoverflow.com/a/913499/798588
-            print "-----------"
-            print points.shape
-            print points
-            print "-----------"
-            return None
+
+        # if np.isnan(cov).any(): # http://stackoverflow.com/a/913499/798588
+        #     print "-----------"
+        #     print points.shape
+        #     print points
+        #     print "-----------"
+        #     return None
         
         eig_vals, eig_vecs = np.linalg.eig(cov)
 
         # reversed sort, '-' causes the reverse
-        eig_vecs_dsc = map(lambda tpl:tpl[1], sorted(zip(eig_vals, eig_vecs),key=(lambda tpl:-tpl[0])))
+        eig_vecs_dsc = map(
+            lambda tpl:tpl[1], # get eig_vecs
+            sorted(
+                zip(eig_vals, eig_vecs), 
+                key=(lambda tpl:tpl[0])), # sort by eigen value
+                reverse=True
+            )
 
         return eig_vecs_dsc[0]
 
@@ -102,7 +109,4 @@ class Utils(object):
     @classmethod
     def orientation_of_points(CLS, points):
         axis = CLS.principal_axis_of_points(points)
-        if axis is None:
-            return None
-        else:
-            return math.atan2(axis[1],axis[0]) # in rad
+        return math.atan2(axis[1],axis[0]) # in rad

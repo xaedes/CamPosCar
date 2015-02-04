@@ -323,7 +323,7 @@ class Optimize(object):
     # returns list of lists of indices into points
     def cluster(self, points, hilbert, cutoff):
         idxs = np.arange(points.shape[0])
-        # return [idxs] # stub! everything in one cluster
+        return [idxs] # stub! everything in one cluster
         
         # sort points according to its hilbert values
         sorted_idxs = sorted(idxs,key=lambda idx:hilbert[points[idx][0],points[idx][1]])
@@ -358,12 +358,14 @@ class Optimize(object):
         return clusters
 
 
-    def correct_theta_nearest_edge(self, edge_points, x0, y0, theta0, xcorr, ycorr, labels, label_positions, hilbert, camview, skip=5, cutoff=10):
+    def correct_theta_nearest_edge(self, edge_points, x, y, theta0, labels, label_positions, hilbert, camview, skip=5, cutoff=10):
+        if edge_points.shape[0] == 0:
+            return 0
         transformed = camview.transform_camview_to_car_xy(edge_points)
         transformed = camview.transform_car_xy_to_global(transformed,
                 angle = theta0 + camview.angle_offset,
-                global_x = x0+xcorr, 
-                global_y = y0+ycorr)
+                global_x = x, 
+                global_y = y)
 
         xx,yy = transformed[:,0], transformed[:,1]
         # select points that in bound of labeled area
