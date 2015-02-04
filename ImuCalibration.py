@@ -15,7 +15,7 @@ class ImuCalibration(object):
         # in m/s2 
         self.accel_scale = 1.0
         self.accel_x_bias = 0
-        self.accel_x_variance = (0.02) ** 2 # einfach mal so angenommen...
+        self.accel_x_variance = (1.02) ** 2 # einfach mal so angenommen...
 
         # in rad / s
         self.gyro_scale = 1.0
