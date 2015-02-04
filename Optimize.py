@@ -319,3 +319,34 @@ class Optimize(object):
                 break
 
         return (xcorr, ycorr)
+
+    def cluster(self, points, hilbert, cutoff):
+        # sort points according to its hilbert values
+        # create clusters from sorted list 
+        # create new cluster when next point in sorted list is too far from points in current cluster
+        return [points] # stub: everything in one cluster
+
+    def correct_theta_nearest_edge(self, edge_points, x0, y0, theta0, xcorr, ycorr, labels, label_positions, hilbert, camview, skip=5):
+        transformed = camview.transform_camview_to_car_xy(edge_points)
+        transformed = camview.transform_car_xy_to_global(transformed,
+                angle = theta0 + camview.angle_offset,
+                global_x = x0+xcorr, 
+                global_y = y0+ycorr)
+
+        xx,yy = transformed[:,0], transformed[:,1]
+        # select points that in bound of labeled area
+        in_bounds = np.logical_and(np.logical_and(xx>=0,yy>=0),np.logical_and(xx<labels.shape[0],yy<labels.shape[1]))
+
+        # get nearest points according to labels and label_positions of all transformed points in bounds
+        nearest_edge = np.array([label_positions[label] for label in labels[xx[in_bounds],yy[in_bounds]]])
+
+        # find clusters in nearest points on bg edge to transformed
+        clustered = self.cluster(nearest_edge, hilbert)
+
+        # for each cluster: cluster corresponding transformed points creating subclusters
+
+        # for each subcluster: 
+        # orientation correction by subtraction of orientation of principal axis from 
+        # subcluster transformed points and corresponding nearest_edge points
+
+        # mean of corrections
