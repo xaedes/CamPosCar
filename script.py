@@ -376,7 +376,7 @@ class App(object):
                 camview = self.cars[0].camview,
                 skip = 20,
                 tol = 1e-1,
-                maxiter = 10)
+                maxiter = 1)
             error = self.optimize.distance_mean(
                 xytheta = (x_corr, y_corr, 0),
                 edge_points = edge_points,
