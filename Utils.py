@@ -79,3 +79,12 @@ class Utils(object):
         yy,xx = np.meshgrid(*map(np.arange,reversed(bw.shape)))
         xx,yy = xx[bw == 0], yy[bw == 0] # select black pixel positions
         return np.array(zip(xx,yy))
+
+    @classmethod
+    def principal_axis_of_points(CLS, points):
+        return (1,1) # stub! todo: use image moments to calc principal axis    
+
+    @classmethod
+    def orientation_of_points(CLS, points):
+        axis = CLS.principal_axis_of_points(points)
+        return math.atan2(axis[1],axis[0]) # in rad

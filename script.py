@@ -38,6 +38,7 @@ from CamView import CamView
 from INS import INS
 from IMU import IMU
 from Optimize import Optimize
+from Hilbert import Hilbert
 
 
 import math
@@ -74,6 +75,10 @@ class App(object):
         # create dictionary mapping labels to zero point positions
         self.label_positions = dict(zip(zero_labels,zip(zero_points[:,0],zero_points[:,1])))
 
+        # create hilbert curve lookup table
+        self.hilbert = Hilbert.hilbert_lookup(*self.background.arr.shape[:2])
+
+        print self.hilbert
 
         # provide a rgb variant of dist for display
         self.background.arr_dist_rgb = self.background.arr.copy()
