@@ -323,7 +323,7 @@ class Optimize(object):
     # returns list of lists of indices into points
     def cluster(self, points, hilbert, cutoff):
         idxs = np.arange(points.shape[0])
-        return [idxs] # stub! everything in one cluster
+        # return [idxs[::2]] # stub! everything in one cluster
         
         # sort points according to its hilbert values
         sorted_idxs = sorted(idxs,key=lambda idx:hilbert[points[idx][0],points[idx][1]])
@@ -338,10 +338,14 @@ class Optimize(object):
                 current.append(idx)
             else:
                 # calculate distances from idx to all points in current
-                dxs = points[current,0] - points[idx,0]
-                dys = points[current,1] - points[idx,1]
-                dists = np.sqrt(dxs*dxs+dys*dys)
-                if dists.min() > cutoff:
+                dx = points[current[-1],0] - points[idx,0]
+                dy = points[current[-1],1] - points[idx,1]
+                dist = np.sqrt(dx*dx+dy*dy)
+                # dxs = points[current,0] - points[idx,0]
+                # dys = points[current,1] - points[idx,1]
+                # dists = np.sqrt(dxs*dxs+dys*dys)
+                # dist = dists.min()
+                if dist > cutoff:
                     # idx too far away from even the nearest point in current
                     # -> create new cluster
                     clusters.append(current)

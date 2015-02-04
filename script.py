@@ -298,7 +298,13 @@ class App(object):
         (left_button, middle_button, right_button) = pygame.mouse.get_pressed() 
         
 
-        # keys = pygame.key.get_pressed()
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_HOME]:
+            self.cars[0].ins.update_pose(
+                self.cars[0].x-self.cars[0].ins.get_state("pos_x"), 
+                self.cars[0].y-self.cars[0].ins.get_state("pos_y"), 
+                self.cars[0].theta*Utils.d2r-self.cars[0].ins.get_state("orientation"), 
+                gain = 0.5)
         # if self.lane.selected is not None:
         #     if keys[pygame.K_DELETE]:
         #         self.lane.remove_support_point(self.lane.selected)
@@ -389,7 +395,7 @@ class App(object):
                 label_positions = self.label_positions, 
                 hilbert = self.hilbert,
                 camview = self.cars[0].camview, 
-                skip = 20,
+                skip = 40,
                 cutoff = 20
                 )
             error = self.optimize.distance_mean(

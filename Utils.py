@@ -94,12 +94,14 @@ class Utils(object):
         eig_vals, eig_vecs = np.linalg.eig(cov)
 
         # reversed sort, '-' causes the reverse
-        eig_vecs_dsc = map(
-            lambda tpl:tpl[1], # get eig_vecs
-            sorted(
-                zip(eig_vals, eig_vecs), 
-                key=(lambda tpl:tpl[0])), # sort by eigen value
-                reverse=True
+        eig_vecs_dsc = \
+            map(
+                lambda tpl:tpl[1], # get eig_vecs
+                sorted(
+                    zip(eig_vals, eig_vecs), 
+                    key=(lambda tpl:tpl[0]), # sort by eigen value
+                    reverse=True
+                )
             )
 
         return eig_vecs_dsc[0]

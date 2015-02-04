@@ -77,8 +77,11 @@ class Car(object):
         # update orientation
         self.theta += self.gyro * dt  # in degree
 
+        # orientation difference
+        d_th = abs(self.theta - self.last["theta"]) * Utils.d2r
+
         # if gyro is below threshold linear motion is assumed
-        if abs(self.gyro) < 1e-3:
+        if abs(self.gyro) < 1e-3 or d_th < 1e-3:
             self.vx = math.cos(self.theta*Utils.d2r) * self.speed * dt
             self.vy = math.sin(self.theta*Utils.d2r) * self.speed * dt
 
@@ -100,8 +103,6 @@ class Car(object):
             # see whiteboard in wiki
             # notes: whiteboard 'c' is 'b' here
             
-            # orientation difference
-            d_th = abs(self.theta - self.last["theta"]) * Utils.d2r
             
             # radius of circle on which's arc is moved
             r = self.speed * dt / d_th
