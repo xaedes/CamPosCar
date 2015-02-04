@@ -323,16 +323,40 @@ class Optimize(object):
     # returns list of lists of indices into points
     def cluster(self, points, hilbert, cutoff):
         idxs = np.arange(points.shape[0])
+        # return [idxs] # stub! everything in one cluster
+        
         # sort points according to its hilbert values
-        # todo
+        sorted_idxs = sorted(idxs,key=lambda idx:hilbert[points[idx][0],points[idx][1]])
+
         
-        # create clusters from sorted list 
-        # todo
-        
-        # create new cluster when next point in sorted list is too far from points in current cluster
-        # todo
-        
-        return [idxs] # stub! everything in one cluster
+        ## create clusters from sorted list 
+        # create new cluster when next point in sorted list if too far from points in current cluster
+        clusters = []
+        current = []
+        for idx in sorted_idxs:
+            if current == []:
+                current.append(idx)
+            else:
+                # calculate distances from idx to all points in current
+                dxs = points[current][0] - points[idx][0]
+                dys = points[current][1] - points[idx][1]
+                dists = np.sqrt(dx*dx+dy*dy)
+                if dists.min() > cutoff:
+                    # idx too far away from even the nearest point in current
+                    # -> create new cluster
+                    clusters.append(current)
+                    current = [idx]
+                else:
+                    # otherwise add idx to current
+                    cluster.append(idx)
+                    
+
+        # add last remaining cluster
+        if len(current) > 0:
+            clusters.append(current)
+
+        return clusters
+
 
     def correct_theta_nearest_edge(self, edge_points, x0, y0, theta0, xcorr, ycorr, labels, label_positions, hilbert, camview, skip=5):
         transformed = camview.transform_camview_to_car_xy(edge_points)
