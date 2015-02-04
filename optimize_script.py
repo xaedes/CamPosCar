@@ -36,6 +36,7 @@ from CamView import CamView
 # from INS import INS
 # from IMU import IMU
 from Optimize import Optimize
+from Hilbert import Hilbert
 
 
 import math
@@ -72,6 +73,8 @@ class App(object):
         # create dictionary mapping labels to zero point positions
         self.label_positions = dict(zip(zero_labels,zip(zero_points[:,0],zero_points[:,1])))
 
+        # create hilbert curve lookup table
+        self.hilbert = Hilbert.hilbert_lookup(*self.background.arr.shape[:2])
 
         # provide a rgb variant of dist for display
         self.background.arr_dist_rgb = self.background.arr.copy()
@@ -99,13 +102,15 @@ class App(object):
         self.cars = []
         self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for actual car
         self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate
-        self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate optimization single pass
-        self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate optimization multi pass
+        self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate xy optimization single pass
+        self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate xy optimization multi pass
+        self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate theta optimization
 
         for car in self.cars:
             car.color = Draw.WHITE
         self.cars[2].color = Draw.YELLOW
         self.cars[3].color = Draw.RED
+        self.cars[4].color = Draw.GREEN
 
         self.action = None
 
@@ -120,6 +125,7 @@ class App(object):
         self.cars[1].name = "estimate"
         self.cars[2].name = "opt"
         self.cars[3].name = "opt*"
+        self.cars[4].name = "theta"
         self.cars[0].controller = self.controller
         self.cars[1].controller = self.controller
         self.cars[0].camview = CamView(self.cars[0],self.background.arr)
@@ -134,6 +140,13 @@ class App(object):
             optimize = self.optimize, 
             labels = self.labels, 
             label_positions = self.label_positions, 
+            camview = self.cars[0].camview, 
+            estimate_car = self.cars[1])
+        self.cars[4].controller = OptimizeNearestEdgeTheta(
+            optimize = self.optimize, 
+            labels = self.labels, 
+            label_positions = self.label_positions, 
+            hilbert = self.hilbert, 
             camview = self.cars[0].camview, 
             estimate_car = self.cars[1])
 

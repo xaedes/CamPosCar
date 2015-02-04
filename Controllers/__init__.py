@@ -12,3 +12,4 @@ from BestFirstController import *
 from DragAndDropController import *
 from OptimizeNearestEdgeXYSinglePass import *
 from OptimizeNearestEdgeXYMultiPass import *
+from OptimizeNearestEdgeTheta import *

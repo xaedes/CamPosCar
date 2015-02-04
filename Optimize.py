@@ -338,9 +338,9 @@ class Optimize(object):
                 current.append(idx)
             else:
                 # calculate distances from idx to all points in current
-                dxs = points[current][0] - points[idx][0]
-                dys = points[current][1] - points[idx][1]
-                dists = np.sqrt(dx*dx+dy*dy)
+                dxs = points[current,0] - points[idx,0]
+                dys = points[current,1] - points[idx,1]
+                dists = np.sqrt(dxs*dxs+dys*dys)
                 if dists.min() > cutoff:
                     # idx too far away from even the nearest point in current
                     # -> create new cluster
@@ -348,7 +348,7 @@ class Optimize(object):
                     current = [idx]
                 else:
                     # otherwise add idx to current
-                    cluster.append(idx)
+                    current.append(idx)
                     
 
         # add last remaining cluster
@@ -358,7 +358,7 @@ class Optimize(object):
         return clusters
 
 
-    def correct_theta_nearest_edge(self, edge_points, x0, y0, theta0, xcorr, ycorr, labels, label_positions, hilbert, camview, skip=5):
+    def correct_theta_nearest_edge(self, edge_points, x0, y0, theta0, xcorr, ycorr, labels, label_positions, hilbert, camview, skip=5, cutoff=10):
         transformed = camview.transform_camview_to_car_xy(edge_points)
         transformed = camview.transform_car_xy_to_global(transformed,
                 angle = theta0 + camview.angle_offset,
@@ -373,7 +373,7 @@ class Optimize(object):
         nearest_edge = np.array([label_positions[label] for label in labels[xx[in_bounds],yy[in_bounds]]])
 
         # find clusters in nearest points on bg edge to transformed
-        clustered_nearest = self.cluster(nearest_edge, hilbert)
+        clustered_nearest = self.cluster(nearest_edge, hilbert, cutoff)
 
         # corrections
         thetacorrs = []
@@ -384,16 +384,19 @@ class Optimize(object):
             cluster_nearest = nearest_edge[cluster]
             cluster_transformed = transformed[in_bounds][cluster]
 
-            clustered_transformed = self.cluster(cluster_transformed, hilbert)
+            clustered_transformed = self.cluster(cluster_transformed, hilbert, cutoff)
             # (clustered_transformed points into cluster_transformed and cluster_nearest)
 
             # for each subcluster: 
             # orientation correction by subtraction of orientation of principal axis from 
             # subcluster transformed points and corresponding nearest_edge points
             for subcluster in clustered_transformed:
-                subcluster_nearest = cluster_nearest[subcluster]
-                subcluster_transformed = cluster_transformed[subcluster]
-                thetacorrs.append(Utils.orientation_of_points(subcluster_nearest) - Utils.orientation_of_points(subcluster_transformed))
+                if len(subcluster) >= 2: # we need at least 2 to get orientation info
+                    subcluster_nearest = cluster_nearest[subcluster]
+                    subcluster_transformed = cluster_transformed[subcluster]
+                    orientation_nearest = Utils.orientation_of_points(subcluster_nearest)
+                    orientation_transformed = Utils.orientation_of_points(subcluster_transformed)
+                    thetacorrs.append(orientation_nearest - orientation_transformed)
 
         thetacorrs = np.array(thetacorrs) / Utils.d2r
         # mean of corrections
