@@ -39,6 +39,8 @@ from INS import INS
 from IMU import IMU
 from Optimize import Optimize
 from Hilbert import Hilbert
+from RingBuffer import RingBuffer
+from Plot import *
 
 
 import math
@@ -104,7 +106,7 @@ class App(object):
         self.cars = []
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
-        self.cars.append(Car(x=50,y=250,theta=90,speed=2 * 1.5*90))
+        self.cars.append(Car(x=50,y=250,theta=90,speed=1 * 1.5*90))
         self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [1] human
         self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [2] ghost of ins estimating [0]
 
@@ -159,6 +161,13 @@ class App(object):
             car.speed = car.speed_on - car.speed
 
             # car.pause = not car.pause        
+
+
+        self.plot_window_size = 100
+        self.xy_corr_ring_buffer = RingBuffer(self.plot_window_size,channels=2)
+        self.xy_corr_plot = RingBufferPlot(self.xy_corr_ring_buffer)
+
+        self.hist_plot = HistogramPlot(10)
 
         self.register_events()
         self.spin()
@@ -437,6 +446,13 @@ class App(object):
 
 
             print x_corr, y_corr, theta_corr, error
+
+            self.xy_corr_ring_buffer.add([x_corr, y_corr])
+            if not hasattr(self.xy_corr_plot,"last_draw") or time()-self.xy_corr_plot.last_draw > 5:
+                self.xy_corr_plot.last_draw = time()
+                self.xy_corr_plot.draw()
+
+                self.hist_plot.draw(self.xy_corr_ring_buffer.buffer)
 
             car.ins.update_pose(
                 x_corr, 
