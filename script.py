@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import division    # Standardmäßig float division - Ganzzahldivision kann man explizit mit '//' durchführen
+import matplotlib
+matplotlib.use('WXAgg')
+
 import numpy as np                 # Numpy, das Number One Number Crunching Tool
 
 
@@ -16,7 +19,7 @@ import pygame
  
  Explanation video: http://youtu.be/vRB_983kUMc
 """
- 
+
 import pygame
 
 import cv2
@@ -41,7 +44,7 @@ from Optimize import Optimize
 from Hilbert import Hilbert
 from RingBuffer import RingBuffer
 from Plot import *
-
+import scipy.stats
 
 import math
 from copy import copy
@@ -164,10 +167,11 @@ class App(object):
 
 
         self.plot_window_size = 100
-        self.xy_corr_ring_buffer = RingBuffer(self.plot_window_size,channels=2)
-        self.xy_corr_plot = RingBufferPlot(self.xy_corr_ring_buffer)
+        self.xyt_corr_ring_buffer = RingBuffer(self.plot_window_size,channels=3)
+        self.xyt_corr_plot = RingBufferPlot(self.xyt_corr_ring_buffer)
+        self.normal_test_p_value_plot = RingBufferPlot(RingBuffer(self.plot_window_size,channels=self.xyt_corr_ring_buffer.channels))
 
-        self.hist_plot = HistogramPlot(10)
+        # self.hist_plot = HistogramPlot(10)
 
         self.register_events()
         self.spin()
@@ -447,12 +451,16 @@ class App(object):
 
             print x_corr, y_corr, theta_corr, error
 
-            self.xy_corr_ring_buffer.add([x_corr, y_corr])
-            if not hasattr(self.xy_corr_plot,"last_draw") or time()-self.xy_corr_plot.last_draw > 5:
-                self.xy_corr_plot.last_draw = time()
-                self.xy_corr_plot.draw()
+            self.xyt_corr_ring_buffer.add([x_corr, y_corr, theta_corr])
+            _,p_values = scipy.stats.normaltest(self.xyt_corr_ring_buffer.buffer)
+            self.normal_test_p_value_plot.ring_buffer.add(p_values)
+            if not hasattr(self,"last_plot_update") or time()-self.last_plot_update > 5:
+                self.last_plot_update = time()
+                self.xyt_corr_plot.draw()
 
-                self.hist_plot.draw(self.xy_corr_ring_buffer.buffer)
+                # self.hist_plot.draw(np.sqrt(np.abs(self.xyt_corr_ring_buffer.buffer))*np.sign(self.xyt_corr_ring_buffer.buffer))
+
+                self.normal_test_p_value_plot.draw()
 
             car.ins.update_pose(
                 x_corr, 

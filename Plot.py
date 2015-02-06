@@ -21,7 +21,7 @@ class Plot(object):
         self.fig = plt
         self.fig_number = Plot.__fig_number__
         Plot.__fig_number__ += 1
-        self.fig.figure(self.fig_number)
+        self.fig.figure(self.fig_number,figsize=(4,3))
         self.fig.ion() # enable interactive mode
         if auto_show:
             self.show()
