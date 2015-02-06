@@ -37,6 +37,7 @@ from CamView import CamView
 # from IMU import IMU
 from Optimize import Optimize
 from Hilbert import Hilbert
+from Plot import Plot
 
 
 import math
@@ -88,7 +89,8 @@ class App(object):
 
         self.events = Events()
 
-
+        self.plt = Plot()
+        self.plt.arr = np.random.normal(0,1,100).cumsum()
 
         self.lane = Lane(self.events)
         self.lane.load("parkour.sv")
@@ -253,6 +255,13 @@ class App(object):
                 car.draw(self.screen)
             if hasattr(car, "camview"):
                 car.camview.draw(self.screen)
+
+        # test plot
+        self.plt.begin()
+        self.plt.arr = self.plt.arr[1] + np.random.normal(0,1,100).cumsum()
+        self.plt.fig.plot(self.plt.arr)
+        self.plt.end()
+
 
     def on_keyup(self, event):
         if self.lane.selected is not None \
