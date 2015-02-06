@@ -169,7 +169,8 @@ class App(object):
         self.plot_window_size = 100
         self.xyt_corr_ring_buffer = RingBuffer(self.plot_window_size,channels=3)
         self.xyt_corr_plot = RingBufferPlot(self.xyt_corr_ring_buffer)
-        self.normal_test_p_value_plot = RingBufferPlot(RingBuffer(self.plot_window_size,channels=self.xyt_corr_ring_buffer.channels))
+        # self.normal_test_p_value_plot = RingBufferPlot(RingBuffer(self.plot_window_size,channels=self.xyt_corr_ring_buffer.channels))
+        self.std_plot = RingBufferPlot(RingBuffer(self.plot_window_size,channels=self.xyt_corr_ring_buffer.channels))
 
         # self.hist_plot = HistogramPlot(10)
 
@@ -452,15 +453,17 @@ class App(object):
             print x_corr, y_corr, theta_corr, error
 
             self.xyt_corr_ring_buffer.add([x_corr, y_corr, theta_corr])
-            _,p_values = scipy.stats.normaltest(self.xyt_corr_ring_buffer.buffer)
-            self.normal_test_p_value_plot.ring_buffer.add(p_values)
+            _,p_values = scipy.stats.normaltest(self.xyt_corr_ring_buffer.buffer[-50:,:])
+            # self.normal_test_p_value_plot.ring_buffer.add(p_values)
+            self.std_plot.ring_buffer.add(self.xyt_corr_ring_buffer.buffer[-50:,:].std(axis=0))
             if not hasattr(self,"last_plot_update") or time()-self.last_plot_update > 5:
                 self.last_plot_update = time()
                 self.xyt_corr_plot.draw()
 
                 # self.hist_plot.draw(np.sqrt(np.abs(self.xyt_corr_ring_buffer.buffer))*np.sign(self.xyt_corr_ring_buffer.buffer))
 
-                self.normal_test_p_value_plot.draw()
+                self.std_plot.draw()
+                # self.normal_test_p_value_plot.draw()
 
             car.ins.update_pose(
                 x_corr, 
