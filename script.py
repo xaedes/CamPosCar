@@ -66,6 +66,7 @@ class App(object):
         
         # get nearest (zero) pixel labels with corresponding distances
         self.background.arr_dist,self.labels = cv2.distanceTransformWithLabels(self.background.arr_bw, cv.CV_DIST_L1, 3,labelType = cv2.DIST_LABEL_PIXEL)
+        self.distances = self.background.arr_dist
 
         ### get x,y coordinates for each label
         # get positions of zero points
@@ -103,7 +104,7 @@ class App(object):
         self.cars = []
         # for k in range(1):
             # self.cars.append(Car(x=150+k*5,y=100,theta=np.random.randint(0,360),speed=np.random.randint(45,180)))
-        self.cars.append(Car(x=50,y=250,theta=90,speed=1 * 1.5*90))
+        self.cars.append(Car(x=50,y=250,theta=90,speed=2 * 1.5*90))
         self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [1] human
         self.cars.append(Car(x=50,y=250,theta=90,speed=1*90)) # [2] ghost of ins estimating [0]
 
@@ -140,7 +141,7 @@ class App(object):
         self.cars[2].name = "estimate"
 
         # this causes the controller of cars[0] to use the information from cars[0].ghost but act on cars[0]
-        self.cars[0].ghost = self.cars[2]
+        # self.cars[0].ghost = self.cars[2]
 
         # self.window = Window(self.screen, self.events, 300, 200, "caption")
 
@@ -386,26 +387,35 @@ class App(object):
                 skip = 20,
                 tol = 1e-1,
                 maxiter = 1)
-            theta_corr = self.optimize.correct_theta_nearest_edge(
+            # correct estimate 
+            theta_corr = self.optimize.correct_theta_parable(
                 edge_points = edge_points,
                 x = car.ins.get_state("pos_x") + x_corr,
                 y = car.ins.get_state("pos_y") + y_corr,
                 theta0 = car.ins.get_state("orientation") / Utils.d2r,
-                labels = self.labels,
-                label_positions = self.label_positions, 
-                hilbert = self.hilbert,
                 camview = self.cars[0].camview, 
-                skip = 40,
-                cutoff = 20
-                )
+                distances = self.distances
+                )            
+            # theta_corr = self.optimize.correct_theta_nearest_edge(
+            #     edge_points = edge_points,
+            #     x = car.ins.get_state("pos_x") + x_corr,
+            #     y = car.ins.get_state("pos_y") + y_corr,
+            #     theta0 = car.ins.get_state("orientation") / Utils.d2r,
+            #     labels = self.labels,
+            #     label_positions = self.label_positions, 
+            #     hilbert = self.hilbert,
+            #     camview = self.cars[0].camview, 
+            #     skip = 40,
+            #     cutoff = 20
+            #     )
             error = self.optimize.distance_mean(
-                xytheta = (x_corr, y_corr, 0),
+                xytheta = (x_corr, y_corr, theta_corr),
                 edge_points = edge_points,
                 x0 = car.ins.get_state("pos_x"),
                 y0 = car.ins.get_state("pos_y"),
                 theta0 = car.ins.get_state("orientation") / Utils.d2r,
                 camview = self.cars[0].camview,
-                distances = self.background.arr_dist
+                distances = self.distances
                 )
 
             if error is None:
@@ -415,7 +425,7 @@ class App(object):
             # (x_corr, y_corr, theta_corr), error = self.optimize_correction(
             # (x_corr, y_corr, theta_corr), error = self.optimize.optimize_correction(
             #     edge_points = Utils.zero_points(bw), 
-            #     distances = self.background.arr_dist, 
+            #     distances = self.distances, 
             #     camview = self.cars[0].camview,
             #     x0 = car.ins.get_state("pos_x"),
             #     y0 = car.ins.get_state("pos_y"),

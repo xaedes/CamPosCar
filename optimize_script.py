@@ -65,6 +65,7 @@ class App(object):
         
         # get nearest (zero) pixel labels with corresponding distances
         self.background.arr_dist,self.labels = cv2.distanceTransformWithLabels(self.background.arr_bw, cv.CV_DIST_L1, 3,labelType = cv2.DIST_LABEL_PIXEL)
+        self.distances = self.background.arr_dist
 
         ### get x,y coordinates for each label
         # get positions of zero points
@@ -85,12 +86,10 @@ class App(object):
         # print a.shape
 
         self.setup_pygame()
-        self.background.arr_dist = cv2.distanceTransform(self.background.arr_bw, cv.CV_DIST_L1, 3)
 
         self.events = Events()
 
         self.plt = Plot()
-        self.plt.arr = np.random.normal(0,1,100).cumsum()
 
         self.lane = Lane(self.events)
         self.lane.load("parkour.sv")
@@ -103,7 +102,7 @@ class App(object):
 
         self.cars = []
         self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for actual car
-        self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate
+        self.cars.append(Car(x=100,y=100,theta=-45+15,speed=0)) # representation for ins estimate
         self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate xy optimization single pass
         self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate xy optimization multi pass
         self.cars.append(Car(x=100,y=100,theta=-45,speed=0)) # representation for ins estimate theta optimization
@@ -144,13 +143,18 @@ class App(object):
             label_positions = self.label_positions, 
             camview = self.cars[0].camview, 
             estimate_car = self.cars[1])
-        self.cars[4].controller = OptimizeNearestEdgeTheta(
+        self.cars[4].controller = OptimizeThetaParable(
             optimize = self.optimize, 
-            labels = self.labels, 
-            label_positions = self.label_positions, 
-            hilbert = self.hilbert, 
+            distances = self.distances, 
             camview = self.cars[0].camview, 
-            estimate_car = self.cars[1])
+            estimate_car = self.cars[3])
+        # self.cars[4].controller = OptimizeNearestEdgeTheta(
+        #     optimize = self.optimize, 
+        #     labels = self.labels, 
+        #     label_positions = self.label_positions, 
+        #     hilbert = self.hilbert, 
+        #     camview = self.cars[0].camview, 
+        #     estimate_car = self.cars[1])
 
         # self.window = Window(self.screen, self.events, 300, 200, "caption")
 
@@ -184,6 +188,7 @@ class App(object):
         camview = self.cars[0].camview
         actual_view = camview.view
 
+        edge_points_in_car_xy = None
         if actual_view is not None:
 
             # bw
@@ -192,11 +197,11 @@ class App(object):
             skip = 5
             edge_points = Utils.zero_points(bw)[::skip,:]
 
-            transformed = camview.transform_camview_to_car_xy(edge_points,
+            edge_points_in_car_xy = camview.transform_camview_to_car_xy(edge_points,
                 flip_x = True, flip_y = False, flip_xy = False
                 )
             
-            transformed = camview.transform_car_xy_to_global(transformed,
+            transformed = camview.transform_car_xy_to_global(edge_points_in_car_xy,
                     angle = self.cars[1].theta + camview.angle_offset,
                     global_x = self.cars[1].x, 
                     global_y = self.cars[1].y)
@@ -256,11 +261,22 @@ class App(object):
             if hasattr(car, "camview"):
                 car.camview.draw(self.screen)
 
-        # test plot
-        self.plt.begin()
-        self.plt.arr = self.plt.arr[1] + np.random.normal(0,1,100).cumsum()
-        self.plt.fig.plot(self.plt.arr)
-        self.plt.end()
+        # # plot error_over_theta
+        # if edge_points_in_car_xy is not None:
+        #     self.plt.begin()
+        #     thetas = np.linspace(-20,20,20)
+        #     error_over_theta = [self.optimize.distance_mean_in_car_xy(
+        #         xytheta = (0,0,theta),
+        #         edge_points_in_car_xy = edge_points_in_car_xy,
+        #         x0 = self.cars[3].x,
+        #         y0 = self.cars[3].y,
+        #         theta0 = self.cars[3].theta,
+        #         camview = self.cars[0].camview,
+        #         distances = self.distances,
+        #         k = 2
+        #         ) for theta in thetas]
+        #     self.plt.fig.plot(thetas, error_over_theta)
+        #     self.plt.end()
 
 
     def on_keyup(self, event):
@@ -279,6 +295,12 @@ class App(object):
         # get mouse info
         cursor = pygame.mouse.get_pos()
         (left_button, middle_button, right_button) = pygame.mouse.get_pressed() 
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_UP]:
+            self.cars[1].theta += 5
+        if keys[pygame.K_DOWN]:
+            self.cars[1].theta -= 5
         
     def register_events(self):
         self.events.register_callback("quit", self.on_quit)

@@ -407,3 +407,51 @@ class Optimize(object):
         thetacorrs = np.array(thetacorrs) / Utils.d2r
         # mean of corrections
         return thetacorrs.mean()
+
+    def correct_theta_parable(self, edge_points, x, y, theta0, camview, distances):
+        if edge_points.shape[0] == 0:
+            return 0
+
+        edge_points_in_car_xy = camview.transform_camview_to_car_xy(edge_points,
+                flip_x = True, flip_y = False, flip_xy = False
+                )
+
+        xs = [-10,0,10]
+        ys = [self.distance_mean_in_car_xy(
+                xytheta = (0,0,theta),
+                edge_points_in_car_xy = edge_points_in_car_xy,
+                x0 = x,
+                y0 = y,
+                theta0 = theta0,
+                camview = camview,
+                distances = distances,
+                k = 2
+                ) for theta in xs]
+
+        if any(map(lambda y: y is None,ys)): 
+            return 0
+
+        # fit quadratic function to three support points of error function
+        x0,x1,x2 = xs
+        y0,y1,y2 = ys
+        a = -(x0 * y1 - x0 * y2 - x1 * y0 + x1 * y2 + x2 * y0 - x2 * y1) / (x0 ** 2 * x1 - x0 ** 2 * x2 - x0 * x1 ** 2 + x0 * x2 ** 2 + x1 ** 2 * x2 - x1 * x2 ** 2)
+        b = (x0 ** 2 * y1 - x0 ** 2 * y2 - x1 ** 2 * y0 + x1 ** 2 * y2 + y0 * x2 ** 2 - y1 * x2 ** 2) / (x0 - x1) / (x0 * x1 - x0 * x2 - x1 * x2 + x2 ** 2)
+
+        # not necessary, but for completeness
+        # c = (x0 ** 2 * x1 * y2 - x0 ** 2 * x2 * y1 - x0 * x1 ** 2 * y2 + x0 * x2 ** 2 * y1 + x1 ** 2 * x2 * y0 - x1 * x2 ** 2 * y0) / (x0 - x1) / (x0 * x1 - x0 * x2 - x1 * x2 + x2 ** 2)
+
+        # constant or linear function
+        if a == 0:
+            return 0
+
+        # upside down parable
+        if a < 0:
+            return 0
+
+        # calculate minimum position
+        theta_opt = (-b) / (2*a)
+
+        if math.isnan(theta_opt):
+            return 0
+
+        return theta_opt
