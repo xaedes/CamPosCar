@@ -171,6 +171,7 @@ class App(object):
         self.xyt_corr_plot = RingBufferPlot(self.xyt_corr_ring_buffer)
         # self.normal_test_p_value_plot = RingBufferPlot(RingBuffer(self.plot_window_size,channels=self.xyt_corr_ring_buffer.channels))
         self.std_plot = RingBufferPlot(RingBuffer(self.plot_window_size,channels=self.xyt_corr_ring_buffer.channels))
+        self.velocity_carthesian_history_plot = RingBufferPlot(self.cars[0].ins.velocity_carthesian_history)
 
         # self.hist_plot = HistogramPlot(10)
 
@@ -456,14 +457,6 @@ class App(object):
             _,p_values = scipy.stats.normaltest(self.xyt_corr_ring_buffer.buffer[-50:,:])
             # self.normal_test_p_value_plot.ring_buffer.add(p_values)
             self.std_plot.ring_buffer.add(self.xyt_corr_ring_buffer.buffer[-50:,:].std(axis=0))
-            if not hasattr(self,"last_plot_update") or time()-self.last_plot_update > 5:
-                self.last_plot_update = time()
-                self.xyt_corr_plot.draw()
-
-                # self.hist_plot.draw(np.sqrt(np.abs(self.xyt_corr_ring_buffer.buffer))*np.sign(self.xyt_corr_ring_buffer.buffer))
-
-                self.std_plot.draw()
-                # self.normal_test_p_value_plot.draw()
 
             car.ins.update_pose(
                 x_corr, 
@@ -473,6 +466,16 @@ class App(object):
                 gain = min(1,2.5*1/error if error != 0 else 1))
 
         car.ins.update(car.imu.get_sensor_array(), dt)
+
+        if not hasattr(self,"last_plot_update") or time()-self.last_plot_update > 5:
+            self.last_plot_update = time()
+            self.xyt_corr_plot.draw()
+
+            # self.hist_plot.draw(np.sqrt(np.abs(self.xyt_corr_ring_buffer.buffer))*np.sign(self.xyt_corr_ring_buffer.buffer))
+
+            self.std_plot.draw()
+            self.velocity_carthesian_history_plot.draw()
+            # self.normal_test_p_value_plot.draw()
 
     def spin(self):
         # Loop until the user clicks the close button.

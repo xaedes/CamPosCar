@@ -8,6 +8,7 @@ from Kalman import Kalman
 from Utils import Utils # vorkommen nach aufrufen suchen und an aktuelle Utils methoden anpassen
 
 from ImuCalibration import ImuCalibration
+from RingBuffer import RingBuffer
 
 class Integrator(object):
     def __init__(self, dt=1):
@@ -60,6 +61,8 @@ class INS(object):
 
         self.mag_offset = None
         self.o_error_last = None
+
+        self.velocity_carthesian_history = RingBuffer(100,2)
 
     def calibrate_sensors(self, Z):
         Z = Z.copy()
@@ -136,6 +139,8 @@ class INS(object):
 
         # resolution of velocity vector
         velocity = Utils.rotate_points([(self.states['speed'],0)],self.states['orientation']/Utils.d2r)[0]
+
+        self.velocity_carthesian_history.add(velocity)
 
         # integrate velocity vector
         self.vx_integrated.add(velocity[0],dt)

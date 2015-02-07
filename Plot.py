@@ -62,7 +62,7 @@ class PlotCached(Plot):
                 self.cache[name].set_color(color)
 
 
-class RingBufferPlot(PlotCached):
+class RingBufferPlot(Plot):
     """docstring for RingBufferPlot"""
     def __init__(self, ring_buffer, colors = ['r','b','g'], x_axis_channel = None, auto_show = True):
         super(RingBufferPlot, self).__init__(auto_show)
@@ -84,7 +84,7 @@ class RingBufferPlot(PlotCached):
             x_axis = np.arange(self.ring_buffer.length)
 
         for k, channel in enumerate(filter((lambda ch: ch != self.x_axis_channel), range(self.ring_buffer.channels))):
-            self.plot(channel,x_axis,self.ring_buffer.buffer[:,channel],self.colors[k % len(self.colors)])
+            self.fig.plot(x_axis,self.ring_buffer.buffer[:,channel],self.colors[k % len(self.colors)])
 
         self.end()
 
